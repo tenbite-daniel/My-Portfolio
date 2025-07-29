@@ -7,12 +7,19 @@ export default {
             fontFamily: {
                 sans: ["Inter", "Poppins", "Roboto", "sans-serif"],
             },
+            fontSize: {
+                contentSize: "1.1rem",
+            },
             backgroundImage: {
                 nameGradient: "linear-gradient(to right, #345CEB, #7040EC)",
             },
             colors: {
                 h1: "#524EEC",
+                textColor: "#2463EB",
                 previewBtn: "#E6F1FF",
+                darkerDarkBackground: "#020717",
+                blueBackground: "#F7FAFF",
+                lighterDarkBackground: "#0B1324",
             },
             animation: {
                 spin360: "spin360 0.7s ease-in-out",

@@ -48,7 +48,7 @@ export default function Hero() {
     return (
         <main
             id="hero"
-            className="w-full min-h-[90vh] flex flex-col md:flex-row-reverse md:gap-2 items-center justify-evenly px-4 pt-20 md:pt-0 md:pl-32  dark:bg-gray-900"
+            className="w-full min-h-[90vh] flex flex-col md:flex-row-reverse md:gap-2 items-center justify-evenly px-4 pt-20 md:pt-0 md:pl-32  dark:bg-darkerDarkBackground pb-10"
         >
             <div className="md:flex-1 w-full flex justify-center overflow-hidden md:mx-auto pb-6">
                 <img

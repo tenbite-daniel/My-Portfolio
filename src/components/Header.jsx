@@ -36,26 +36,26 @@ export default function Header() {
 
     const navLinks = (
         <>
-            <a href="#Hero" className="text-xl hover:text-h1">
+            <a href="#hero" className="text-xl hover:text-h1">
                 Home
             </a>
-            <a href="#About" className="text-xl hover:text-h1">
+            <a href="#about" className="text-xl hover:text-h1">
                 About
             </a>
-            <a href="#Projects" className="text-xl hover:text-h1">
+            <a href="#projects" className="text-xl hover:text-h1">
                 Projects
             </a>
-            <a href="#Skills" className="text-xl hover:text-h1">
+            <a href="#skills" className="text-xl hover:text-h1">
                 Skills
             </a>
-            <a href="#Contact" className="text-xl hover:text-h1">
+            <a href="#contact" className="text-xl hover:text-h1">
                 Contact
             </a>
         </>
     );
 
     return (
-        <header className="w-full sticky top-0 left-0 bg-white dark:bg-gray-900 shadow-md p-5">
+        <header className="w-full sticky top-0 left-0 bg-white dark:bg-darkerDarkBackground shadow-md p-5 z-50">
             <div className="w-full flex justify-between px-10">
                 <h1 className="text-h1 text-3xl font-bold">My Portfolio</h1>
                 {/* Desktop Menu */}
