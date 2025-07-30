@@ -37,7 +37,10 @@ export default function Projects() {
     const showClear = selectedFilters.length > 0;
 
     return (
-        <article id="projects" className="p-4 dark:bg-darkerDarkBackground">
+        <article
+            id="projects"
+            className="pt-14 p-4 dark:bg-darkerDarkBackground"
+        >
             <h2 className="text-center dark:text-white text-4xl font-bold mt-10">
                 Projects
             </h2>
