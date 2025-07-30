@@ -1,7 +1,7 @@
 import { FiBriefcase } from "react-icons/fi";
 import { AcademicCapIcon } from "@heroicons/react/24/outline";
 import { LuDownload } from "react-icons/lu";
-import aboutImg from "../assets/images/about img 2.jpg";
+import aboutImg from "../../assets/images/about img 2.jpg";
 
 import AboutCard from "./AboutCard";
 
@@ -27,9 +27,9 @@ export default function About() {
             id="about"
             className="py-20 bg-blueBackground dark:bg-lighterDarkBackground"
         >
-            <h1 className="text-4xl font-bold text-center dark:text-white">
+            <h2 className="text-4xl font-bold text-center dark:text-white">
                 About Me
-            </h1>
+            </h2>
             <section className="w-full mt-10 flex flex-col justify-center items-center md:flex-row gap-10">
                 <img
                     src={aboutImg}

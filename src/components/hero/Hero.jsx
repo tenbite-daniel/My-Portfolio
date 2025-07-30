@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import heroImg from "../assets/images/hero img.jpg";
+import heroImg from "../../assets/images/hero img.jpg";
 import PreviewResume from "./PreviewResume";
 
 export default function Hero() {
