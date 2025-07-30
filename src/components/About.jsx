@@ -12,8 +12,7 @@ export default function About() {
         hidden: { opacity: 0, y: 300 },
         show: { opacity: 1, y: 0 },
     };
-
-    const fileUrl = "/resume.pdf";
+    const fileUrl = "/Tenbite_Daniel_Resume.pdf";
     function handleDownload() {
         const anchor = document.createElement("a");
         anchor.href = fileUrl;

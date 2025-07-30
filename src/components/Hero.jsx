@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import heroImg from "../assets/images/hero img.jpg";
+import PreviewResume from "./PreviewResume";
 
 export default function Hero() {
     const positions = [
@@ -17,6 +18,7 @@ export default function Hero() {
     const [textIndex, setTextIndex] = useState(0);
     const [charIndex, setCharIndex] = useState(0);
     const [isDeleting, setIsDeleting] = useState(false);
+    const [resumeOpen, setResumeOpen] = useState(false);
 
     const currentText = positions[textIndex];
     const visibleText = currentText.substring(0, charIndex);
@@ -44,6 +46,9 @@ export default function Hero() {
         }
         return () => clearTimeout(timeout);
     }, [charIndex, isDeleting, textIndex, currentText]);
+
+    const openPreview = () => setResumeOpen(true);
+    const closePreview = () => setResumeOpen(false);
 
     return (
         <main
@@ -78,10 +83,14 @@ export default function Hero() {
                     </p>
                 </section>
                 <section className="w-full flex flex-col gap-4 mt-5 md:flex-row">
-                    <button className="group w-full p-3 border-2 rounded-xl hover:bg-previewBtn dark:text-white dark:hover:bg-gray-700 dark:border-gray-700">
+                    <button
+                        className="group w-full p-3 border-2 rounded-xl hover:bg-previewBtn dark:text-white dark:hover:bg-gray-700 dark:border-gray-700"
+                        onClick={openPreview}
+                    >
                         <i className="fas fa-eye me-1 mr-2 transform transition-transform duration-300 group-hover:scale-110"></i>
                         Preview
                     </button>
+                    <PreviewResume isOpen={resumeOpen} onClose={closePreview} />
                     <a href="#projects" className="w-full">
                         <button className="group w-full p-3 border-2 rounded-xl bg-gradient-to-r from-blue-600 to-purple-600 hover:bg-gradient-to-r hover:from-blue-500 hover:to-purple-500 border-none dark:text-white">
                             <i className="fas fa-briefcase mr-2 transform transition-transform duration-300 group-hover:scale-110"></i>
