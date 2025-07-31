@@ -56,7 +56,7 @@ export default function Header() {
 
     return (
         <header className="w-full sticky top-0 left-0 bg-white dark:bg-darkerDarkBackground shadow-md p-5 z-50">
-            <div className="w-full flex justify-between px-10">
+            <div className="w-full flex justify-between md:px-10">
                 <h1 className="text-h1 text-3xl font-bold">My Portfolio</h1>
                 {/* Desktop Menu */}
                 <nav
@@ -71,9 +71,9 @@ export default function Header() {
                         className="text-xl dark:text-white"
                     >
                         {isDark ? (
-                            <i class="fa-regular fa-sun"></i>
+                            <i className="fa-regular fa-sun"></i>
                         ) : (
-                            <i class="fa-regular fa-moon"></i>
+                            <i className="fa-regular fa-moon"></i>
                         )}
                     </button>
                     {/* Mobile Humburger Menu */}
@@ -82,7 +82,7 @@ export default function Header() {
                         className="text-xl dark:text-white md:hidden"
                     >
                         {isOpen ? (
-                            <i class="fa-solid fa-xmark animate-spin360"></i>
+                            <i className="fa-solid fa-xmark animate-spin360"></i>
                         ) : (
                             <i className="fas fa-bars text-xl" />
                         )}

@@ -19,7 +19,7 @@ export default function Contact() {
                 projects, or just having a chat about technology. Feel free to
                 reach out!
             </p>
-            <section className="w-full mt-10 p-4 flex flex-col md:flex-row-reverse md:px-28 justify-center gap-5 items-center">
+            <section className="w-full mt-10 flex flex-col md:flex-row-reverse md:px-28 justify-center gap-5 items-center">
                 <section className="w-full">
                     <h3 className="text-2xl font-semibold dark:text-white">
                         Contact Information
@@ -27,12 +27,12 @@ export default function Contact() {
                     <section className="flex items-center gap-6 p-6 mt-5 bg-[#F2F8FF] hover:bg-[#E6F1FF] dark:bg-[#121B2D] dark:text-white hover:dark:bg-[#222F44]">
                         <HiOutlineMail
                             size={50}
-                            className="text-blue-600 bg-[#D3E2FC] dark:bg-[#233454] p-2 rounded-xl"
+                            className="text-blue-600 bg-[#D3E2FC] dark:bg-[#233454] p-2 rounded-xl shrink-0"
                         />
                         <div>
                             <h4 className="text-xl">Email</h4>
-                            <p className="text-xl text-gray-500">
-                                tenbitedaniel@gmail.com
+                            <p className="text-lg text-gray-500">
+                                tenbitedaniel60@gmail.com
                             </p>
                         </div>
                     </section>
