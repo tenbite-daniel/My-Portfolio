@@ -18,12 +18,12 @@ export default function Skills() {
             <h3 className="text-center mt-14 text-3xl font-semibold dark:text-white">
                 Areas of Expertise
             </h3>
-            <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5 mt-10">
+            <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5 md:gap-y-10 mt-10">
                 <ExpertiseCard
                     icon={
                         <FaCode
-                            size={50}
-                            className="text-blue-500 bg-blue-100 dark:text-blue-600 dark:bg-[rgb(9,28,73)] p-2 rounded-xl mx-auto group-hover:bg-blue-200"
+                            size={65}
+                            className="text-blue-500 bg-blue-100 dark:text-blue-600 dark:bg-[rgb(8,25,57)] p-3 rounded-xl mx-auto group-hover:bg-blue-200 group-hover:dark:bg-[rgb(15,35,78)] "
                         />
                     }
                     title="Frontend Development"
@@ -32,8 +32,8 @@ export default function Skills() {
                 <ExpertiseCard
                     icon={
                         <FaServer
-                            size={50}
-                            className="text-blue-500 bg-blue-100 dark:text-blue-600 dark:bg-[rgb(9,28,73)] p-2 rounded-xl mx-auto group-hover:bg-blue-200"
+                            size={65}
+                            className="text-blue-500 bg-blue-100 dark:text-blue-600 dark:bg-[rgb(8,25,57)] p-3 rounded-xl mx-auto group-hover:bg-blue-200 group-hover:dark:bg-[rgb(15,35,78)] "
                         />
                     }
                     title="Backend Development"
@@ -42,8 +42,8 @@ export default function Skills() {
                 <ExpertiseCard
                     icon={
                         <FaDatabase
-                            size={50}
-                            className="text-blue-500 bg-blue-100 dark:text-blue-600 dark:bg-[rgb(9,28,73)] p-2 rounded-xl mx-auto group-hover:bg-blue-200"
+                            size={65}
+                            className="text-blue-500 bg-blue-100 dark:text-blue-600 dark:bg-[rgb(8,25,57)] p-3 rounded-xl mx-auto group-hover:bg-blue-200 group-hover:dark:bg-[rgb(15,35,78)] "
                         />
                     }
                     title="Database Design"
@@ -52,8 +52,8 @@ export default function Skills() {
                 <ExpertiseCard
                     icon={
                         <FaCogs
-                            size={50}
-                            className="text-blue-500 bg-blue-100 dark:text-blue-600 dark:bg-[rgb(9,28,73)] p-2 rounded-xl mx-auto group-hover:bg-blue-200"
+                            size={65}
+                            className="text-blue-500 bg-blue-100 dark:text-blue-600 dark:bg-[rgb(8,25,57)] p-3 rounded-xl mx-auto group-hover:bg-blue-200 group-hover:dark:bg-[rgb(15,35,78)] "
                         />
                     }
                     title="Full Stack Integration"
