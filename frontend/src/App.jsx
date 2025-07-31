@@ -4,6 +4,8 @@ import About from "./components/about/About";
 import Projects from "./components/projects/Projects";
 import Skills from "./components/skills/Skills";
 import Contact from "./components/contact/Contact";
+import Footer from "./components/Footer";
+import BackToTop from "./components/BackToTop";
 import { useEffect } from "react";
 
 function App() {
@@ -18,6 +20,9 @@ function App() {
             <Projects />
             <Skills />
             <Contact />
+            <Footer />
+
+            <BackToTop />
         </div>
     );
 }

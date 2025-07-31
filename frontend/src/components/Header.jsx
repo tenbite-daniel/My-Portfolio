@@ -57,7 +57,7 @@ export default function Header() {
     return (
         <header className="w-full sticky top-0 left-0 bg-white dark:bg-darkerDarkBackground shadow-md p-5 z-50">
             <div className="w-full flex justify-between md:px-10">
-                <h1 className="text-h1 text-3xl font-bold">My Portfolio</h1>
+                <h1 className="text-h1 text-3xl font-bold">Tenbite Daniel</h1>
                 {/* Desktop Menu */}
                 <nav
                     className="hidden md:flex gap-14 dark:text-white"

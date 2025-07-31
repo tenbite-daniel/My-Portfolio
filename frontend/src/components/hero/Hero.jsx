@@ -53,7 +53,7 @@ export default function Hero() {
     return (
         <main
             id="hero"
-            className="w-full min-h-[90vh] flex flex-col md:flex-row-reverse md:gap-2 items-center justify-evenly pt-20 md:pt-0 md:pl-32  dark:bg-darkerDarkBackground pb-10"
+            className="w-full min-h-[90vh] flex flex-col lg:flex-row-reverse md:gap-2 items-center justify-evenly pt-20 md:pt-0 md:pl-32  dark:bg-darkerDarkBackground pb-10"
         >
             <div className="md:flex-1 w-full flex justify-center overflow-hidden md:mx-auto pb-6">
                 <img
@@ -82,7 +82,7 @@ export default function Hero() {
                         web solutions.
                     </p>
                 </section>
-                <section className="w-full flex flex-col gap-4 mt-5 md:flex-row">
+                <section className="w-full flex flex-col gap-4 mt-5 lg:flex-row">
                     <button
                         className="group w-full p-3 border-2 rounded-xl hover:bg-previewBtn dark:text-white dark:hover:bg-gray-700 dark:border-gray-700"
                         onClick={openPreview}

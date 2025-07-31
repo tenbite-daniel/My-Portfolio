@@ -30,14 +30,14 @@ export default function About() {
             <h2 className="text-4xl font-bold text-center dark:text-white">
                 About Me
             </h2>
-            <section className="w-full mt-10 flex flex-col justify-center items-center md:flex-row gap-10">
+            <section className="w-full mt-10 flex flex-col justify-center items-center lg:flex-row gap-10">
                 <img
                     src={aboutImg}
                     className="w-2/3 max-w-[350px] max-h-[100vh] rounded-xl"
                     alt="Tenbite's formal Picture"
                 />
                 <section className="md:w-1/2 px-12 text-lg">
-                    <p className=" dark:text-white dark:text-opacity-60 text-lg text-center md:text-left font-light">
+                    <p className=" dark:text-white dark:text-opacity-60 text-lg text-left font-light">
                         Hi, I'm{" "}
                         <span className="text-h1 font-semibold text-opacity-100">
                             Tim
@@ -57,13 +57,13 @@ export default function About() {
                         </span>
                         .
                     </p>
-                    <p className="mt-5 dark:text-white dark:text-opacity-60 text-xl font-light text-lg text-center md:text-left">
+                    <p className="mt-5 dark:text-white dark:text-opacity-60 font-light text-lg text-left">
                         I got into coding during university after realizing how
                         much impact technology can have on people's lives. I
                         enjoy working on clean, responsive designs and turning
                         ideas into real, usable solutions.
                     </p>
-                    <p className="mt-5 dark:text-white dark:text-opacity-60 text-xl font-light text-lg text-center md:text-left">
+                    <p className="mt-5 dark:text-white dark:text-opacity-60 font-light text-lg text-left">
                         As part of my final year, I worked with a team of five
                         to develop{" "}
                         <span className="text-h1 font-semibold text-opacity-100">
@@ -73,7 +73,7 @@ export default function About() {
                         plans, nutrition guidance, rehab programs, and a
                         community forum where users can support one another.
                     </p>
-                    <p className="mt-5 dark:text-white dark:text-opacity-60 text-xl font-light text-lg text-center md:text-left">
+                    <p className="mt-5 dark:text-white dark:text-opacity-60 text-lg font-light text-left md:text-left">
                         I'm currently open to{" "}
                         <span className="text-h1 font-semibold text-opacity-100">
                             freelance projects
@@ -101,9 +101,9 @@ export default function About() {
                 whileInView="show"
                 viewport={{ once: true }}
                 transition={{ duration: 0.7 }}
-                className="w-full flex flex-col md:flex-row justify-center gap-10 px-4 mt-20 animate-scrollToTop overflow-hidden"
+                className="w-full flex flex-col lg:flex-row justify-center gap-10 px-4 mt-20 animate-scrollToTop overflow-hidden"
             >
-                <section className="max-w-[600px] bg-[#FBFDFF] dark:bg-[#060E22] border border-l-[5px] border-l-blue-500 dark:border-gray-800 dark:border-l-blue-500  rounded-xl p-8 flex flex-col gap-8 transform transition-transform hover:-translate-y-1 group hover:shadow-xl shadow-blue-800">
+                <section className="w-full max-w-[600px] bg-[#FBFDFF] dark:bg-[#060E22] border border-l-[5px] border-l-blue-500 dark:border-gray-800 dark:border-l-blue-500  rounded-xl p-8 flex flex-col gap-8 transform transition-transform hover:-translate-y-1 group hover:shadow-xl shadow-blue-800">
                     <h2 className="flex gap-3 items-center text-3xl font-semibold text-textColor">
                         <AcademicCapIcon className="w-12 h-12 text-textColor bg-blue-200 dark:bg-[#0B1C3D] p-2 rounded-xl group-hover:bg-blue-300 group-hover:dark:bg-[#0e214d]" />
                         Education

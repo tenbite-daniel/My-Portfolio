@@ -9,7 +9,7 @@ export default function Contact() {
     return (
         <article
             id="projects"
-            className="pt-14 p-4 dark:bg-darkerDarkBackground"
+            className="py-14 p-4 dark:bg-darkerDarkBackground"
         >
             <h2 className="text-center dark:text-white text-4xl font-bold mt-10">
                 Get In Touch
@@ -19,7 +19,7 @@ export default function Contact() {
                 projects, or just having a chat about technology. Feel free to
                 reach out!
             </p>
-            <section className="w-full mt-10 flex flex-col md:flex-row-reverse md:px-28 justify-center gap-5 items-center">
+            <section className="w-full mt-10 flex flex-col lg:flex-row-reverse md:px-28 justify-center gap-5 items-center">
                 <section className="w-full">
                     <h3 className="text-2xl font-semibold dark:text-white">
                         Contact Information
