@@ -12,6 +12,8 @@ export default {
             },
             backgroundImage: {
                 nameGradient: "linear-gradient(to right, #345CEB, #7040EC)",
+                nameGradiantHover:
+                    "linear-gradient(to right, #2b4ad3, #5c32c2)",
             },
             colors: {
                 h1: "#524EEC",
