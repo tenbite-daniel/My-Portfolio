@@ -12,7 +12,7 @@ const PORT = process.env.PORT || 5000;
 
 const allowedOrigin =
     process.env.NODE_ENV === "production"
-        ? "https://your-production-frontend.com"
+        ? process.env.FRONTEND_URL
         : "http://localhost:5173";
 
 app.use(
@@ -23,6 +23,10 @@ app.use(
 );
 
 app.use(express.json());
+
+app.get("/", (req, res) => {
+    res.send("Backend is Live!");
+});
 
 function isValidName(name) {
     if (typeof name !== "string") return false;
