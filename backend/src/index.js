@@ -94,9 +94,9 @@ app.post("/api/send", async (req, res) => {
             },
         });
 
-        if (!data.success || data.score < 0.5) {
+        if (!data.success) {
             console.warn(
-                `Failed reCAPTCHA attempt from IP: ${req.ip} with score: ${data.score}`
+                `Failed reCAPTCHA attempt from IP: ${req.ip}`
             );
             return res.status(400).json({
                 success: false,
