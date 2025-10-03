@@ -8,7 +8,7 @@ import {
 export default function Contact() {
     return (
         <article
-            id="projects"
+            id="contact"
             className="py-14 p-4 dark:bg-darkerDarkBackground"
         >
             <h2 className="text-center dark:text-white text-4xl font-bold mt-10">

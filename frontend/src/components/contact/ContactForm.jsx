@@ -58,7 +58,6 @@ export default function ContactForm() {
                     name="name"
                     id="name"
                     required
-                    autoFocus
                     autoComplete="on"
                     className="border border-gray-300 dark:border-gray-800 dark:bg-[#020717] rounded-xl p-2 pl-3 mt-2"
                 />
