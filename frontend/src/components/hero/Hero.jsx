@@ -45,7 +45,7 @@ export default function Hero() {
             setCharIndex(0);
         }
         return () => clearTimeout(timeout);
-    }, [charIndex, isDeleting, textIndex, currentText]);
+    }, [charIndex, isDeleting, textIndex]);
 
     const openPreview = () => setResumeOpen(true);
     const closePreview = () => setResumeOpen(false);
@@ -63,6 +63,8 @@ export default function Hero() {
                     }
                     className="max-w-80 max-h-80 rounded-full shadow-lg shadow-blue-900 dark:shadow-blue-800 delay-300"
                     alt="Tenbite's Picture"
+                    loading="eager"
+                    fetchPriority="high"
                 />
             </div>
             <article className="w-full md:flex-1 text-center md:text-left animate-slideInLeft delay-300 px-4">
@@ -84,15 +86,16 @@ export default function Hero() {
                 </section>
                 <section className="w-full flex flex-col gap-4 mt-5 lg:flex-row">
                     <button
-                        className="group w-full p-3 border-2 rounded-xl hover:bg-previewBtn dark:text-white dark:hover:bg-gray-700 dark:border-gray-700"
+                        className="group w-full py-4 px-6 border-2 rounded-xl hover:bg-previewBtn dark:text-white dark:hover:bg-gray-700 dark:border-gray-700"
                         onClick={openPreview}
+                        aria-label="Preview resume"
                     >
                         <i className="fas fa-eye me-1 mr-2 transform transition-transform duration-300 group-hover:scale-110"></i>
                         Preview
                     </button>
                     <PreviewResume isOpen={resumeOpen} onClose={closePreview} />
                     <a href="#projects" className="w-full">
-                        <button className="group w-full p-3 border-2 rounded-xl bg-gradient-to-r from-blue-600 to-purple-600 hover:bg-gradient-to-r hover:from-blue-500 hover:to-purple-500 border-none dark:text-white">
+                        <button className="group w-full py-4 px-6 min-h-[44px] border-2 rounded-xl bg-gradient-to-r from-blue-600 to-purple-600 hover:bg-gradient-to-r hover:from-blue-500 hover:to-purple-500 border-none dark:text-white">
                             <i className="fas fa-briefcase mr-2 transform transition-transform duration-300 group-hover:scale-110"></i>
                             View Projects
                         </button>

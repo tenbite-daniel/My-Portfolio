@@ -35,7 +35,7 @@ export default function Footer() {
                     <h1 className="text-3xl font-bold text-textColor">
                         Tenbite Daniel
                     </h1>
-                    <p className="text-xl text-gray-400 mt-5 max-w-md">
+                    <p className="text-xl text-gray-600 dark:text-gray-300 mt-5 max-w-md">
                         A passionate Full Stack Developer dedicated to creating
                         innovative web solutions with modern technologies and
                         best practices.
@@ -46,6 +46,7 @@ export default function Footer() {
                             target="_blank"
                             rel="noopener noreferrer"
                             className="hover:text-black"
+                            aria-label="Visit Tenbite Daniel's GitHub profile"
                         >
                             <AiOutlineGithub className="text-5xl text-blue-600 bg-blue-200 dark:bg-gray-800 rounded-xl p-2 hover:bg-blue-300 hover:dark:bg-gray-700" />
                         </a>
@@ -54,12 +55,14 @@ export default function Footer() {
                             target="_blank"
                             rel="noopener noreferrer"
                             className="hover:text-blue-700"
+                            aria-label="Visit Tenbite Daniel's LinkedIn profile"
                         >
                             <AiOutlineLinkedin className="text-5xl text-blue-600 bg-blue-200 dark:bg-gray-800 rounded-xl p-2 hover:bg-blue-300 hover:dark:bg-gray-700" />
                         </a>
                         <a
                             href="mailto:tenbitedaniel60@gmail.com"
                             className="hover:text-red-500"
+                            aria-label="Send email to Tenbite Daniel"
                         >
                             <AiOutlineMail className="text-5xl text-blue-600 bg-blue-200 dark:bg-gray-800 rounded-xl p-2 hover:bg-blue-300 hover:dark:bg-gray-700" />
                         </a>
@@ -68,6 +71,7 @@ export default function Footer() {
                             target="_blank"
                             rel="noopener noreferrer"
                             className="hover:text-sky-500"
+                            aria-label="Contact Tenbite Daniel on Telegram"
                         >
                             <TbBrandTelegram className="text-5xl text-blue-600 bg-blue-200 dark:bg-gray-800 rounded-xl p-2 hover:bg-blue-300 hover:dark:bg-gray-700" />
                         </a>
@@ -78,7 +82,7 @@ export default function Footer() {
                         Quick Links
                     </h2>
                     <nav
-                        className="flex flex-col gap-2 text-lg text-gray-400 mt-2"
+                        className="flex flex-col gap-2 text-lg text-gray-600 dark:text-gray-300 mt-2"
                         aria-label="footer menu"
                     >
                         {navLinks}
@@ -88,20 +92,20 @@ export default function Footer() {
                     <h2 className="text-xl font-semibold dark:text-white mt-4">
                         Get in Touch
                     </h2>
-                    <p className="text-gray-400 mt-2 text-lg">
+                    <p className="text-gray-600 dark:text-gray-300 mt-2 text-lg">
                         tenbitedaniel60@gmail.com
                     </p>
-                    <p className="text-gray-400 mt-2 text-lg">
+                    <p className="text-gray-600 dark:text-gray-300 mt-2 text-lg">
                         +251-967-606-906
                     </p>
-                    <p className="text-gray-400 mt-2 text-lg">
+                    <p className="text-gray-600 dark:text-gray-300 mt-2 text-lg">
                         Addis Ababa, Ethiopia
                     </p>
                 </section>
             </section>
             <section className="mt-14">
                 <hr className="bg-gray-300 dark:bg-gray-700 h-[1px] border-none mb-10 border-0" />
-                <p className="text-center text-gray-400">
+                <p className="text-center text-gray-600 dark:text-gray-300">
                     &copy; {currentYear} Tenbite Daniel. All rights reserved.
                 </p>
             </section>

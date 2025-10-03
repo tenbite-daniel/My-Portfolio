@@ -69,6 +69,7 @@ export default function Header() {
                     <button
                         onClick={toggleDarkMode}
                         className="text-xl dark:text-white"
+                        aria-label={isDark ? "Switch to light mode" : "Switch to dark mode"}
                     >
                         {isDark ? (
                             <i className="fa-regular fa-sun"></i>
@@ -80,6 +81,7 @@ export default function Header() {
                     <button
                         onClick={() => setIsOpen(!isOpen)}
                         className="text-xl dark:text-white md:hidden"
+                        aria-label={isOpen ? "Close menu" : "Open menu"}
                     >
                         {isOpen ? (
                             <i className="fa-solid fa-xmark animate-spin360"></i>

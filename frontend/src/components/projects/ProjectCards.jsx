@@ -1,20 +1,18 @@
 import { projectsData } from "../../data/projectsData.js";
 import { motion } from "framer-motion";
 
-export default function ProjectCards({ selectedFilters }) {
-    const isAll = selectedFilters.includes("All");
+const fadeInUp = {
+    hidden: { opacity: 0, y: 300 },
+    show: { opacity: 1, y: 0 },
+};
 
+export default function ProjectCards({ selectedFilters }) {
     const filteredProjects =
-        selectedFilters.length === 0
+        selectedFilters.size === 0
             ? projectsData
             : projectsData.filter((project) =>
-                  project.tech.some((tech) => selectedFilters.includes(tech))
+                  project.tech.some((tech) => selectedFilters.has(tech))
               );
-
-    const fadeInUp = {
-        hidden: { opacity: 0, y: 300 },
-        show: { opacity: 1, y: 0 },
-    };
 
     return (
         <motion.article
@@ -34,6 +32,7 @@ export default function ProjectCards({ selectedFilters }) {
                         src={project.image}
                         alt={`${project.title} preview`}
                         className="w-full h-52 object-cover transform transition-transform duration-300 ease-in-out group-hover:scale-110"
+                        loading="lazy"
                     />
 
                     <section className="p-6 flex-1 flex flex-col justify-between">
@@ -46,9 +45,9 @@ export default function ProjectCards({ selectedFilters }) {
                             </p>
 
                             <div className="flex flex-wrap gap-2 mb-4">
-                                {project.tech.map((tech, index) => (
+                                {project.tech.map((tech) => (
                                     <span
-                                        key={index}
+                                        key={tech}
                                         className="px-3 py-2 text-xs bg-gray-200 dark:bg-gray-700 dark:text-white rounded-full"
                                     >
                                         {tech}
@@ -65,7 +64,10 @@ export default function ProjectCards({ selectedFilters }) {
                                     rel="noopener noreferrer"
                                     className="flex-1"
                                 >
-                                    <button className="w-full p-2 text-xl font-semibold bg-white dark:bg-darkerDarkBackground dark:text-white px-4 py-2 border border-gray-300 dark:border-gray-800 rounded-xl hover:bg-blue-600 hover:text-white transition">
+                                    <button 
+                                        className="w-full p-2 text-xl font-semibold bg-white dark:bg-darkerDarkBackground dark:text-white px-4 py-2 border border-gray-300 dark:border-gray-800 rounded-xl hover:bg-blue-600 hover:text-white transition"
+                                        aria-label={`View ${project.title} on GitHub`}
+                                    >
                                         GitHub
                                     </button>
                                 </a>
@@ -77,7 +79,10 @@ export default function ProjectCards({ selectedFilters }) {
                                     rel="noopener noreferrer"
                                     className="flex-1"
                                 >
-                                    <button className="w-full bg-nameGradient p-2 text-xl font-semibold border-none text-white rounded-xl transition">
+                                    <button 
+                                        className="w-full bg-nameGradient p-2 text-xl font-semibold border-none text-white rounded-xl transition"
+                                        aria-label={`View ${project.title} live demo`}
+                                    >
                                         Live Demo
                                     </button>
                                 </a>

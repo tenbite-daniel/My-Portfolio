@@ -7,19 +7,15 @@ import AboutCard from "./AboutCard";
 
 import { motion } from "framer-motion";
 
+const fadeInUp = {
+    hidden: { opacity: 0, y: 300 },
+    show: { opacity: 1, y: 0 },
+};
+
 export default function About() {
-    const fadeInUp = {
-        hidden: { opacity: 0, y: 300 },
-        show: { opacity: 1, y: 0 },
-    };
     const fileUrl = "/Tenbite_Daniel_Resume.pdf";
     function handleDownload() {
-        const anchor = document.createElement("a");
-        anchor.href = fileUrl;
-        anchor.download = "Tenbite_Daniel_Resume.pdf";
-        document.body.appendChild(anchor);
-        anchor.click();
-        document.body.removeChild(anchor);
+        window.open(fileUrl, '_blank');
     }
 
     return (

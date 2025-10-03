@@ -1,10 +1,11 @@
 import { motion } from "framer-motion";
 
+const fadeInUp = {
+    hidden: { opacity: 0, y: 150 },
+    show: { opacity: 1, y: 0 },
+};
+
 export default function ExpertiseCard({ icon, title, description }) {
-    const fadeInUp = {
-        hidden: { opacity: 0, y: 150 },
-        show: { opacity: 1, y: 0 },
-    };
     return (
         <motion.section
             variants={fadeInUp}

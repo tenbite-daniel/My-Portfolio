@@ -114,7 +114,10 @@ export default function ContactForm() {
                 size="invisible"
                 ref={recaptchaRef}
             />
-            <button className="group bg-nameGradient p-3 w-full mt-4 rounded-xl flex gap-4 text-white justify-center items-center text-xl font-semibold hover:bg-nameGradiantHover">
+            <button 
+                className="group bg-nameGradient p-3 w-full mt-4 rounded-xl flex gap-4 text-white justify-center items-center text-xl font-semibold hover:bg-nameGradiantHover"
+                aria-label="Send message"
+            >
                 <LuSend
                     size={24}
                     className="text-white transform transition-transform group-hover:translate-x-1"

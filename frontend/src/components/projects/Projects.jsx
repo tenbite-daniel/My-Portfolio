@@ -20,21 +20,25 @@ export default function Projects() {
         "Framer Motion",
     ];
 
-    const [selectedFilters, setSelectedFilters] = useState([]);
+    const [selectedFilters, setSelectedFilters] = useState(new Set());
 
     function toggleFilter(tech) {
-        setSelectedFilters((prev) =>
-            prev.includes(tech)
-                ? prev.filter((f) => f !== tech)
-                : [...prev, tech]
-        );
+        setSelectedFilters((prev) => {
+            const newSet = new Set(prev);
+            if (newSet.has(tech)) {
+                newSet.delete(tech);
+            } else {
+                newSet.add(tech);
+            }
+            return newSet;
+        });
     }
 
     function clearFilters() {
-        setSelectedFilters([]);
+        setSelectedFilters(new Set());
     }
 
-    const showClear = selectedFilters.length > 0;
+    const showClear = selectedFilters.size > 0;
 
     return (
         <article
@@ -56,7 +60,7 @@ export default function Projects() {
                         key={tech}
                         onClick={() => toggleFilter(tech)}
                         className={`px-4 py-2 rounded-full border transition-colors duration-300 ${
-                            selectedFilters.includes(tech)
+                            selectedFilters.has(tech)
                                 ? "bg-blue-600 text-white border-blue-600 dark:bg-blue-600"
                                 : "bg-transparent text-gray-700 dark:text-gray-300 border-gray-400 hover:bg-blue-500 hover:dark:bg-gray-900 hover:text-white"
                         }`}
