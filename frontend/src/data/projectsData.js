@@ -1,8 +1,8 @@
-import bertuHabeshaReHub from "../assets/images/projects/Bertu Habesha ReHub.png";
-import ghionHomesSales from "../assets/images/projects/Ghion Homes Sales.png";
-import personalPortfolio from "../assets/images/projects/personal-portfolio.png";
-import savoria from "../assets/images/projects/Savoria.png";
-import visitEthiopia from "../assets/images/projects/Visit Ethiopia.png";
+import bertuHabeshaReHub from "../assets/images/projects/Bertu Habesha ReHub.jpg";
+import ghionHomesSales from "../assets/images/projects/Ghion Homes Sales.jpg";
+import personalPortfolio from "../assets/images/projects/personal-portfolio.jpg";
+import savoria from "../assets/images/projects/Savoria.jpg";
+import visitEthiopia from "../assets/images/projects/Visit Ethiopia.jpg";
 
 export const projectsData = [
 	{
