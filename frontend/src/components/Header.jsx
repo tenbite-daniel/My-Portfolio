@@ -1,21 +1,16 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 
 export default function Header() {
     const [isDark, setIsDark] = useState(false);
     const [isOpen, setIsOpen] = useState(false);
 
-    function toggleDarkMode() {
+    const toggleDarkMode = useCallback(() => {
         const html = document.documentElement;
         html.classList.toggle("dark");
         const isDarkNow = html.classList.contains("dark");
         setIsDark(isDarkNow);
-
-        if (isDarkNow) {
-            localStorage.setItem("theme", "dark");
-        } else {
-            localStorage.setItem("theme", "light");
-        }
-    }
+        localStorage.setItem("theme", isDarkNow ? "dark" : "light");
+    }, []);
 
     useEffect(() => {
         const savedTheme = localStorage.getItem("theme");
@@ -34,7 +29,7 @@ export default function Header() {
         }
     }, []);
 
-    const navLinks = (
+    const navLinks = useMemo(() => (
         <>
             <a href="#hero" className="text-xl hover:text-h1">
                 Home
@@ -52,7 +47,7 @@ export default function Header() {
                 Contact
             </a>
         </>
-    );
+    ), []);
 
     return (
         <header className="w-full sticky top-0 left-0 bg-white dark:bg-darkerDarkBackground shadow-md p-5 z-50">

@@ -31,8 +31,12 @@ export default function ProjectCards({ selectedFilters }) {
                     <img
                         src={project.image}
                         alt={`${project.title} preview`}
-                        className="w-full h-52 object-cover transform transition-transform duration-300 ease-in-out group-hover:scale-110"
+                        className="w-full h-52 object-cover"
                         loading="lazy"
+                        width="400"
+                        height="208"
+                        decoding="async"
+                        style={{ contentVisibility: 'auto' }}
                     />
 
                     <section className="p-6 flex-1 flex flex-col justify-between">

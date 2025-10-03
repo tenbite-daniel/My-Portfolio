@@ -1,3 +1,31 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* Performance optimizations */
+.blinking-cursor {
+  animation: blink 1s infinite;
+}
+
+@keyframes blink {
+  0%, 50% { opacity: 1; }
+  51%, 100% { opacity: 0; }
+}
+
+/* Optimize animations */
+.animate-slideInLeft,
+.animate-slideInRight {
+  will-change: transform, opacity;
+  contain: layout style paint;
+}
+
+/* Optimize images */
+img {
+  content-visibility: auto;
+  contain-intrinsic-size: 320px 320px;
+}
+
+/* Reduce layout shifts */
+.min-h-4 {
+  contain: layout;
+}

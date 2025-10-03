@@ -25,12 +25,15 @@
 
 		<title>Tenbite Daniel - Full Stack Web Developer</title>
 		<link
-			rel="stylesheet"
+			rel="preload"
 			href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.0/css/all.min.css"
+			as="style"
+			onload="this.onload=null;this.rel='stylesheet'"
 			integrity="sha512-DxV+EoADOkOygM4IR9yXP8Sb2qwgidEmeqAEmDKIOfPRQZOWbXCzLC6vjbZyy0vPisbH2SyW27+ddLVCN+OMzQ=="
 			crossorigin="anonymous"
 			referrerpolicy="no-referrer"
 		/>
+		<noscript><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.0/css/all.min.css"></noscript>
 		<link rel="preconnect" href="https://fonts.googleapis.com" />
 		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 		<link
@@ -40,7 +43,10 @@
 			onload="this.onload=null;this.rel='stylesheet'"
 		/>
 		<noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Poppins:wght@400;600;700&family=Roboto:wght@400;500;700&display=swap"></noscript>
-		<link rel="preload" href="/src/assets/images/hero img.jpg" as="image" />
+		<link rel="preload" href="/src/assets/images/hero img.jpg" as="image" fetchpriority="high" />
+		<link rel="dns-prefetch" href="https://cdnjs.cloudflare.com" />
+		<link rel="dns-prefetch" href="https://fonts.googleapis.com" />
+		<link rel="dns-prefetch" href="https://fonts.gstatic.com" />
 	</head>
 	<body>
 		<div id="root"></div>
