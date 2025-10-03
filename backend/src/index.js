@@ -1,7 +1,6 @@
 import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
-import nodemailer from "nodemailer";
 import axios from "axios";
 import validator from "validator";
 import rateLimit from "express-rate-limit";
@@ -10,7 +9,20 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-const allowedOrigins = process.env.FRONTEND_URL.split(',').map(origin => origin.trim());
+// Telegram bot configuration
+const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
+const TELEGRAM_CHAT_ID = process.env.TELEGRAM_CHAT_ID;
+
+async function sendTelegramMessage(message) {
+    const url = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`;
+    await axios.post(url, {
+        chat_id: TELEGRAM_CHAT_ID,
+        text: message,
+        parse_mode: 'HTML'
+    });
+}
+
+const allowedOrigins = process.env.CORS_ORIGINS?.split(',').map(origin => origin.trim()).filter(Boolean) || [];
 
 app.use(cors({
   origin: (origin, callback) => {
@@ -104,35 +116,20 @@ app.post("/api/send", async (req, res) => {
             });
         }
 
-        const mailContent = `📩 New Message from Portfolio Contact Form
-        Name: ${name}
-        Email: ${email}
-        Subject: ${subject}
-        Message: ${message}
-        `;
-        // Send email
-        const transporter = nodemailer.createTransport({
-            service: "gmail",
-            auth: {
-                user: process.env.MAIL_USER,
-                pass: process.env.MAIL_PASS,
-            },
-        });
+        const telegramMessage = `📩 <b>New Portfolio Contact</b>\n\n` +
+            `<b>Name:</b> ${name}\n` +
+            `<b>Email:</b> ${email}\n` +
+            `<b>Subject:</b> ${subject}\n` +
+            `<b>Message:</b>\n${message}`;
 
-        await transporter.sendMail({
-            from: process.env.MAIL_USER,
-            to: process.env.MAIL_USER,
-            subject: `Portfolio Contact: ${subject}`,
-            text: mailContent,
-            replyTo: email,
-        });
+        await sendTelegramMessage(telegramMessage);
 
         res.status(200).json({
             success: true,
-            message: "Email sent successfully!",
+            message: "Message sent successfully!",
         });
     } catch (error) {
-        console.error("❌ Email sending failed:", error);
+        console.error("❌ Message sending failed:", error);
 
         res.status(500).json({
             success: false,
