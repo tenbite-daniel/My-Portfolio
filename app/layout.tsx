@@ -43,7 +43,7 @@ export default function RootLayout({
       <body className={`${poppins.variable} font-sans antialiased`}>
         {children}
         <Analytics />
-        <Toaster richColors position="top-center" />
+        <Toaster richColors position="bottom-right" />
       </body>
     </html>
   )
