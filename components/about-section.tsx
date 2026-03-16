@@ -30,6 +30,22 @@ export function AboutSection({ data = aboutData }: AboutSectionProps) {
   const [paused, setPaused] = useState(false)
   const [animated, setAnimated] = useState(true)
   const pauseTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const containerRef = useRef<HTMLDivElement>(null)
+  const [cardWidth, setCardWidth] = useState(0)
+  const GAP = 16
+
+  useEffect(() => {
+    const update = () => {
+      if (!containerRef.current) return
+      const w = containerRef.current.offsetWidth
+      // mobile (<480px): 1 card, tablet/desktop: 2 cards
+      const cols = w < 480 ? 1 : 2
+      setCardWidth((w - GAP * (cols - 1)) / cols)
+    }
+    update()
+    window.addEventListener('resize', update)
+    return () => window.removeEventListener('resize', update)
+  }, [])
   const [testimonyOpen, setTestimonyOpen] = useState(false)
   const [testimonyForm, setTestimonyForm] = useState({ name: '', email: '', text: '', avatar: '' })
   const [testimonyLoading, setTestimonyLoading] = useState(false)
@@ -220,11 +236,12 @@ export function AboutSection({ data = aboutData }: AboutSectionProps) {
           </button>
 
           {/* Cards */}
-          <div className="overflow-hidden mx-4">
+          <div className="overflow-hidden mx-4" ref={containerRef}>
             <div
-              className="flex gap-3 md:gap-4"
+              className="flex"
               style={{
-                transform: `translateX(calc(-${index} * (320px + 1rem)))`,
+                gap: `${GAP}px`,
+                transform: cardWidth ? `translateX(-${index * (cardWidth + GAP)}px)` : undefined,
                 transition: animated ? 'transform 500ms ease-in-out' : 'none',
               }}
             >
@@ -233,21 +250,17 @@ export function AboutSection({ data = aboutData }: AboutSectionProps) {
                   ? testimonial.name.trim().split(/\s+/).map((w: string) => w[0]).slice(0, 2).join('').toUpperCase()
                   : testimonial.name.trim()[0].toUpperCase()
                 return (
-                <div key={i} className="flex-shrink-0 w-72 md:w-80 p-4 md:p-6 bg-secondary rounded-xl md:rounded-2xl border border-border">
-                  <div className="flex items-center gap-3 md:gap-4 mb-3 md:mb-4">
+                <div key={i} className="flex-shrink-0 p-4 bg-secondary rounded-xl md:rounded-2xl border border-border" style={{ width: cardWidth || undefined }}>
+                  <div className="flex items-center gap-3 mb-3">
                     {testimonial.avatar ? (
-                      <img
-                        src={testimonial.avatar}
-                        alt={testimonial.name}
-                        className="w-12 h-12 md:w-14 md:h-14 rounded-xl md:rounded-2xl object-cover flex-shrink-0"
-                      />
+                      <img src={testimonial.avatar} alt={testimonial.name} className="w-11 h-11 rounded-xl object-cover flex-shrink-0" />
                     ) : (
-                      <div className="w-12 h-12 md:w-14 md:h-14 rounded-xl md:rounded-2xl bg-accent/20 flex items-center justify-center flex-shrink-0">
-                        <span className="text-accent font-medium text-base md:text-lg">{initials}</span>
+                      <div className="w-11 h-11 rounded-xl bg-accent/20 flex items-center justify-center flex-shrink-0">
+                        <span className="text-accent font-medium text-base">{initials}</span>
                       </div>
                     )}
                     <div className="min-w-0">
-                      <h4 className="text-base md:text-lg font-semibold text-foreground truncate">{testimonial.name}</h4>
+                      <h4 className="text-base font-semibold text-foreground truncate">{testimonial.name}</h4>
                       <p className="text-xs text-muted-foreground truncate">{testimonial.email}</p>
                     </div>
                   </div>
