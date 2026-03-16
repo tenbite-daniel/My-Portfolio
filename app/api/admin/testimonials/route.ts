@@ -2,35 +2,48 @@ import { NextResponse } from 'next/server'
 import { connectDB } from '@/lib/mongodb'
 import { Testimony } from '@/models/Testimony'
 
-// GET all testimonials
+// Public: submit a new testimony
+export async function POST(req: Request) {
+  try {
+    await connectDB()
+    const { name, email, text, avatar } = await req.json()
+    if (!name || !email || !text) return NextResponse.json({ error: 'Missing fields' }, { status: 400 })
+    const testimony = await Testimony.create({ name, email, text, avatar, status: 'pending' })
+    return NextResponse.json({ testimony }, { status: 201 })
+  } catch {
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+  }
+}
+
+// Admin: get testimonials by status
 export async function GET(req: Request) {
   try {
     await connectDB()
     const { searchParams } = new URL(req.url)
-    const status = searchParams.get('status') // 'pending' | 'approved' | null (all)
-
-    const filter = status === 'pending' ? { approved: false } : status === 'approved' ? { approved: true } : {}
+    const status = searchParams.get('status')
+    const filter = status === 'pending'
+      ? { $or: [{ status: 'pending' }, { status: { $exists: false } }] }
+      : status ? { status } : {}
     const testimonials = await Testimony.find(filter).sort({ createdAt: -1 })
-
     return NextResponse.json({ testimonials })
   } catch {
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }
 
-// PATCH approve/reject a testimony
+// Admin: update status
 export async function PATCH(req: Request) {
   try {
     await connectDB()
-    const { id, approved } = await req.json()
-    await Testimony.findByIdAndUpdate(id, { approved })
-    return NextResponse.json({ success: true })
+    const { id, status } = await req.json()
+    const testimony = await Testimony.findByIdAndUpdate(id, { status }, { new: true })
+    return NextResponse.json({ testimony })
   } catch {
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }
 
-// DELETE a testimony
+// Admin: delete
 export async function DELETE(req: Request) {
   try {
     await connectDB()

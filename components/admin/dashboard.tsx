@@ -20,14 +20,21 @@ interface Testimony {
   email: string
   text: string
   avatar?: string
+  status?: 'pending' | 'approved' | 'rejected'
   createdAt: string
+}
+
+const STATUS_STYLES = {
+  pending: 'bg-yellow-500/10 text-yellow-500',
+  approved: 'bg-green-500/10 text-green-500',
+  rejected: 'bg-destructive/10 text-destructive',
 }
 
 export function AdminDashboard() {
   const [stats, setStats] = useState<Stats | null>(null)
-  const [pending, setPending] = useState<Testimony[]>([])
+  const [testimonials, setTestimonials] = useState<Testimony[]>([])
   const [loadingStats, setLoadingStats] = useState(true)
-  const [loadingPending, setLoadingPending] = useState(true)
+  const [loadingList, setLoadingList] = useState(true)
   const [actionId, setActionId] = useState<string | null>(null)
 
   const fetchStats = useCallback(async () => {
@@ -37,48 +44,33 @@ export function AdminDashboard() {
     setLoadingStats(false)
   }, [])
 
-  const fetchPending = useCallback(async () => {
-    const res = await fetch('/api/admin/testimonials?status=pending')
+  const [filter, setFilter] = useState<'all' | 'pending' | 'approved' | 'rejected'>('all')
+
+  const fetchTestimonials = useCallback(async () => {
+    const res = await fetch('/api/admin/testimonials')
     const data = await res.json()
-    setPending(data.testimonials ?? [])
-    setLoadingPending(false)
+    setTestimonials(data.testimonials ?? [])
+    setLoadingList(false)
   }, [])
 
   useEffect(() => {
     fetchStats()
-    fetchPending()
-  }, [fetchStats, fetchPending])
+    fetchTestimonials()
+  }, [fetchStats, fetchTestimonials])
 
-  const handleApprove = async (id: string) => {
+  const handleStatus = async (id: string, status: 'approved' | 'rejected') => {
     setActionId(id)
     const res = await fetch('/api/admin/testimonials', {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ id, approved: true }),
+      body: JSON.stringify({ id, status }),
     })
     if (res.ok) {
-      toast.success('Testimony approved')
-      setPending((prev) => prev.filter((t) => t._id !== id))
+      toast.success(`Testimony ${status}`)
+      setTestimonials((prev) => prev.map((t) => t._id === id ? { ...t, status } : t))
       fetchStats()
     } else {
-      toast.error('Failed to approve')
-    }
-    setActionId(null)
-  }
-
-  const handleReject = async (id: string) => {
-    setActionId(id)
-    const res = await fetch('/api/admin/testimonials', {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ id, approved: false }),
-    })
-    if (res.ok) {
-      toast.success('Testimony rejected')
-      setPending((prev) => prev.filter((t) => t._id !== id))
-      fetchStats()
-    } else {
-      toast.error('Failed to reject')
+      toast.error('Action failed')
     }
     setActionId(null)
   }
@@ -92,7 +84,7 @@ export function AdminDashboard() {
     })
     if (res.ok) {
       toast.success('Testimony deleted')
-      setPending((prev) => prev.filter((t) => t._id !== id))
+      setTestimonials((prev) => prev.filter((t) => t._id !== id))
       fetchStats()
     } else {
       toast.error('Failed to delete')
@@ -113,6 +105,14 @@ export function AdminDashboard() {
     { label: 'Total Projects', value: stats?.totalProjects ?? 0, icon: FolderOpen, color: 'text-accent', bg: 'bg-accent/10' },
     { label: 'Blog Posts', value: stats?.totalBlogs ?? 0, icon: BookOpen, color: 'text-purple-500', bg: 'bg-purple-500/10' },
   ]
+
+  const [page, setPage] = useState(1)
+  const PAGE_SIZE = 20
+
+  const pendingCount = testimonials.filter((t) => !t.status || t.status === 'pending').length
+  const filtered = filter === 'all' ? testimonials : testimonials.filter((t) => (t.status ?? 'pending') === filter)
+  const totalPages = Math.ceil(filtered.length / PAGE_SIZE)
+  const paginated = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
 
   return (
     <div className="space-y-8">
@@ -147,28 +147,40 @@ export function AdminDashboard() {
       <div>
         <div className="flex items-center gap-2 mb-4">
           <MessageSquare className="w-5 h-5 text-accent" />
-          <h3 className="text-lg font-semibold text-foreground">Pending Testimonials</h3>
-          {!loadingPending && pending.length > 0 && (
+          <h3 className="text-lg font-semibold text-foreground">Testimonials</h3>
+          {!loadingList && pendingCount > 0 && (
             <span className="px-2 py-0.5 text-xs font-medium bg-yellow-500/10 text-yellow-500 rounded-full">
-              {pending.length}
+              {pendingCount} pending
             </span>
           )}
+          <div className="ml-auto">
+            <select
+              value={filter}
+              onChange={(e) => { setFilter(e.target.value as typeof filter); setPage(1) }}
+              className="text-xs px-3 py-1.5 bg-secondary border border-border rounded-lg text-foreground focus:outline-none focus:border-accent"
+            >
+              <option value="all">All</option>
+              <option value="pending">Pending</option>
+              <option value="approved">Approved</option>
+              <option value="rejected">Rejected</option>
+            </select>
+          </div>
         </div>
 
-        {loadingPending ? (
+        {loadingList ? (
           <div className="space-y-3">
             {[1, 2].map((i) => (
               <div key={i} className="h-24 bg-secondary border border-border rounded-2xl animate-pulse" />
             ))}
           </div>
-        ) : pending.length === 0 ? (
+        ) : filtered.length === 0 ? (
           <div className="bg-secondary border border-border rounded-2xl p-8 text-center">
             <CheckCircle className="w-10 h-10 text-green-500 mx-auto mb-3" />
-            <p className="text-sm text-muted-foreground">No pending testimonials</p>
+            <p className="text-sm text-muted-foreground">No {filter === 'all' ? '' : filter} testimonials</p>
           </div>
         ) : (
-          <div className="space-y-3">
-            {pending.map((t) => (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            {paginated.map((t) => (
               <div key={t._id} className="bg-secondary border border-border rounded-2xl p-5 flex gap-4">
                 {t.avatar ? (
                   <img src={t.avatar} alt={t.name} className="w-12 h-12 rounded-xl object-cover flex-shrink-0" />
@@ -179,29 +191,32 @@ export function AdminDashboard() {
                 )}
                 <div className="flex-1 min-w-0">
                   <div className="flex items-start justify-between gap-2">
-                    <div>
+                    <div className="flex items-center gap-2 flex-wrap">
                       <p className="text-sm font-semibold text-foreground">{t.name}</p>
-                      <p className="text-xs text-muted-foreground">{t.email}</p>
+                      <span className={`px-2 py-0.5 text-xs font-medium rounded-full capitalize ${STATUS_STYLES[t.status ?? 'pending']}`}>
+                        {t.status ?? 'pending'}
+                      </span>
                     </div>
                     <p className="text-xs text-muted-foreground whitespace-nowrap">
                       {new Date(t.createdAt).toLocaleDateString()}
                     </p>
                   </div>
+                  <p className="text-xs text-muted-foreground mt-0.5">{t.email}</p>
                   <p className="text-sm text-muted-foreground mt-2 line-clamp-2">{t.text}</p>
                 </div>
                 <div className="flex flex-col gap-2 flex-shrink-0">
                   <button
-                    onClick={() => handleApprove(t._id)}
-                    disabled={actionId === t._id}
-                    className="w-8 h-8 rounded-lg bg-green-500/10 text-green-500 hover:bg-green-500 hover:text-white flex items-center justify-center transition-colors disabled:opacity-50"
+                    onClick={() => handleStatus(t._id, 'approved')}
+                    disabled={actionId === t._id || t.status === 'approved'}
+                    className="w-8 h-8 rounded-lg bg-green-500/10 text-green-500 hover:bg-green-500 hover:text-white flex items-center justify-center transition-colors disabled:opacity-40"
                     title="Approve"
                   >
                     {actionId === t._id ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
                   </button>
                   <button
-                    onClick={() => handleReject(t._id)}
-                    disabled={actionId === t._id}
-                    className="w-8 h-8 rounded-lg bg-yellow-500/10 text-yellow-500 hover:bg-yellow-500 hover:text-white flex items-center justify-center transition-colors disabled:opacity-50"
+                    onClick={() => handleStatus(t._id, 'rejected')}
+                    disabled={actionId === t._id || t.status === 'rejected'}
+                    className="w-8 h-8 rounded-lg bg-yellow-500/10 text-yellow-500 hover:bg-yellow-500 hover:text-white flex items-center justify-center transition-colors disabled:opacity-40"
                     title="Reject"
                   >
                     <X className="w-4 h-4" />
@@ -209,7 +224,7 @@ export function AdminDashboard() {
                   <button
                     onClick={() => handleDelete(t._id)}
                     disabled={actionId === t._id}
-                    className="w-8 h-8 rounded-lg bg-destructive/10 text-destructive hover:bg-destructive hover:text-white flex items-center justify-center transition-colors disabled:opacity-50"
+                    className="w-8 h-8 rounded-lg bg-destructive/10 text-destructive hover:bg-destructive hover:text-white flex items-center justify-center transition-colors disabled:opacity-40"
                     title="Delete"
                   >
                     <Trash2 className="w-4 h-4" />
@@ -217,6 +232,28 @@ export function AdminDashboard() {
                 </div>
               </div>
             ))}
+          </div>
+        )}
+
+        {totalPages > 1 && (
+          <div className="flex items-center justify-center gap-2 mt-6">
+            <button
+              onClick={() => setPage((p) => Math.max(1, p - 1))}
+              disabled={page === 1}
+              className="px-3 py-1.5 text-xs bg-secondary border border-border rounded-lg text-foreground hover:border-accent disabled:opacity-40 transition-colors"
+            >
+              Previous
+            </button>
+            <span className="text-xs text-muted-foreground">
+              Page {page} of {totalPages}
+            </span>
+            <button
+              onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+              disabled={page === totalPages}
+              className="px-3 py-1.5 text-xs bg-secondary border border-border rounded-lg text-foreground hover:border-accent disabled:opacity-40 transition-colors"
+            >
+              Next
+            </button>
           </div>
         )}
       </div>

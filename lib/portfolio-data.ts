@@ -102,30 +102,7 @@ export const aboutData = {
       description: 'Designing intuitive and beautiful user interfaces that enhance user experience.',
     },
   ],
-  testimonials: [
-    {
-      name: 'Daniel Lewis',
-      email: 'daniel@example.com',
-      avatar: '/professional-man.jpg',
-      text: 'John was hired to create a corporate identity. We were very pleased with the work done. He has a lot of experience and is very concerned about the needs of client.',
-    },
-    {
-      name: 'Jessica Miller',
-      email: 'jessica@example.com',
-      avatar: '/professional-woman-diverse.png',
-      text: 'John was hired to create a corporate identity. We were very pleased with the work done. He has a lot of experience and is very concerned about the needs of client.',
-    },
-    {
-      name: 'Michael Chen',
-      email: 'michael@example.com',
-      text: 'Outstanding work! John delivered a high-quality product that exceeded our expectations. His attention to detail is remarkable.',
-    },
-    {
-      name: 'Sarah Johnson',
-      email: 'sarah@example.com',
-      text: 'Professional, creative, and highly skilled. John is the developer you want on your team for any complex project.',
-    },
-  ],
+  testimonials: [],
   clients: [
     { name: 'TechCorp', logo: '/tech-company-logo.jpg' },
     { name: 'StartupHub', logo: '/startup-logo.png' },

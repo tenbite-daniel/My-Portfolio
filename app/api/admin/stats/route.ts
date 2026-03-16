@@ -9,8 +9,8 @@ export async function GET() {
     await connectDB()
 
     const [pendingTestimonials, approvedTestimonials, totalProjects, totalBlogs] = await Promise.all([
-      Testimony.countDocuments({ approved: false }),
-      Testimony.countDocuments({ approved: true }),
+      Testimony.countDocuments({ $or: [{ status: 'pending' }, { status: { $exists: false } }] }),
+      Testimony.countDocuments({ status: 'approved' }),
       Project.countDocuments(),
       Blog.countDocuments(),
     ])
