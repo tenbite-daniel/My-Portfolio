@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { ProfileSidebar } from '@/components/profile-sidebar'
 import { AboutSection } from '@/components/about-section'
@@ -24,14 +24,31 @@ import {
   contactData,
 } from '@/lib/portfolio-data'
 
+type ProfileData = typeof profileData
+
 const PUBLIC_TABS = ['about', 'portfolio', 'github', 'resume', 'blog', 'case studies', 'contact']
 const ADMIN_TABS = ['dashboard', ...PUBLIC_TABS, 'settings']
 
 export default function AdminPage() {
   const router = useRouter()
   const [activeSection, setActiveSection] = useState('dashboard')
+  const [sidebarProfile, setSidebarProfile] = useState<ProfileData>(profileData)
   const navRef = useRef<HTMLElement>(null)
   const mainRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    fetch('/api/admin/settings')
+      .then((r) => r.json())
+      .then(({ profile: p }) => {
+        if (p) setSidebarProfile({ ...profileData, ...p, social: { ...profileData.social, ...p.social } })
+      })
+    const handler = (e: Event) => {
+      const p = (e as CustomEvent).detail
+      setSidebarProfile((prev) => ({ ...prev, ...p, social: { ...prev.social, ...p.social } }))
+    }
+    window.addEventListener('profile-updated', handler)
+    return () => window.removeEventListener('profile-updated', handler)
+  }, [])
 
   const handleTabClick = (section: string) => {
     setActiveSection(section)
@@ -69,12 +86,12 @@ export default function AdminPage() {
 
       {/* Fixed Sidebar - desktop only */}
       <div className="hidden lg:block fixed top-6 left-6 bottom-6 w-80 z-40">
-        <ProfileSidebar data={profileData} />
+        <ProfileSidebar data={sidebarProfile} />
       </div>
 
       {/* Mobile Sidebar */}
       <div className="lg:hidden mb-3 sm:mb-4">
-        <ProfileSidebar data={profileData} />
+        <ProfileSidebar data={sidebarProfile} />
       </div>
 
       <div className="mx-auto max-w-5xl">

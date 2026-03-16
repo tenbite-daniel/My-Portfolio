@@ -3,7 +3,7 @@ import bcrypt from 'bcryptjs'
 import { connectDB } from '@/lib/mongodb'
 import { Admin } from '@/models/Admin'
 import { cookies } from 'next/headers'
-import { verifyToken } from '@/lib/auth'
+import { verifyToken, signToken } from '@/lib/auth'
 
 export async function PATCH(req: Request) {
   try {
@@ -15,7 +15,7 @@ export async function PATCH(req: Request) {
     const { currentPassword, newEmail, newPassword } = await req.json()
     await connectDB()
 
-    const admin = await Admin.findOne({ email: payload.email })
+    const admin = await Admin.findOne({ email: (payload as any).email })
     if (!admin) return NextResponse.json({ error: 'Admin not found' }, { status: 404 })
 
     const valid = await bcrypt.compare(currentPassword, admin.password)
@@ -25,7 +25,12 @@ export async function PATCH(req: Request) {
     if (newPassword) admin.password = await bcrypt.hash(newPassword, 12)
     await admin.save()
 
-    return NextResponse.json({ success: true })
+    const res = NextResponse.json({ success: true })
+    if (newEmail) {
+      const newToken = signToken({ email: newEmail })
+      res.cookies.set('admin_token', newToken, { httpOnly: true, path: '/', maxAge: 60 * 60 * 24 * 7 })
+    }
+    return res
   } catch {
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
