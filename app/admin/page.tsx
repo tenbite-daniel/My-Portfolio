@@ -56,7 +56,7 @@ export default function AdminPage() {
   return (
     <div className="min-h-screen bg-background p-3 sm:p-4 md:p-6 lg:py-6 lg:pr-6 lg:pl-[22rem]">
       <div className="fixed top-0 left-0 right-0 h-7 bg-background z-40" />
-      <div className="fixed top-1 right-3 md:top-1 md:right-4 z-50 flex items-center gap-2">
+      <div className="fixed top-1 right-3 md:top-1 md:right-1 z-50 flex items-center gap-2">
         <button
           onClick={handleLogout}
           className="flex items-center gap-1.5 px-3 py-1.5 text-xs text-muted-foreground hover:text-foreground hover:bg-secondary rounded-lg transition-colors border border-border"
