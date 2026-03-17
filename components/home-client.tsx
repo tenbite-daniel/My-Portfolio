@@ -19,9 +19,10 @@ interface HomeClientProps {
   aboutServices?: { icon: string; title: string; description: string }[]
   aboutClients?: { name: string; logo: string }[]
   aboutShowClients?: boolean
+  testimonials: { name: string; email: string; text: string; avatar?: string }[]
 }
 
-export function HomeClient({ profile, aboutDescription, aboutServices, aboutClients, aboutShowClients }: HomeClientProps) {
+export function HomeClient({ profile, aboutDescription, aboutServices, aboutClients, aboutShowClients, testimonials }: HomeClientProps) {
   const [activeSection, setActiveSection] = useState('about')
   const navRef = useRef<HTMLElement>(null)
   const mainRef = useRef<HTMLDivElement>(null)
@@ -92,7 +93,7 @@ export function HomeClient({ profile, aboutDescription, aboutServices, aboutClie
           </div>
 
           <div className="p-4 sm:p-5 md:p-6 lg:p-8 space-y-8">
-            {activeSection === 'about' && <AboutSection data={aboutData} initialDescription={aboutDescription} initialServices={aboutServices} initialClients={aboutClients} initialShowClients={aboutShowClients} />}
+            {activeSection === 'about' && <AboutSection data={aboutData} initialDescription={aboutDescription} initialServices={aboutServices} initialClients={aboutClients} initialShowClients={aboutShowClients} initialTestimonials={testimonials} />}
             {activeSection === 'portfolio' && <PortfolioSection data={portfolioData} />}
             {activeSection === 'case studies' && <CaseStudiesSection />}
             {activeSection === 'blog' && <BlogSection />}

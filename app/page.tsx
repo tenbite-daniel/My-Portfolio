@@ -1,6 +1,7 @@
 import { connectDB } from '@/lib/mongodb'
 import { Profile } from '@/models/Profile'
 import { About } from '@/models/About'
+import { Testimony } from '@/models/Testimony'
 import { profileData, aboutData } from '@/lib/portfolio-data'
 import { HomeClient } from '@/components/home-client'
 import { cacheTag } from 'next/cache'
@@ -12,10 +13,25 @@ async function getProfile() {
   return Profile.findOne().lean() as any
 }
 
+async function getAbout() {
+  'use cache'
+  cacheTag('about')
+  await connectDB()
+  return About.findOne().lean() as any
+}
+
+async function getTestimonials() {
+  'use cache'
+  cacheTag('testimonials')
+  await connectDB()
+  return Testimony.find({ status: 'approved' }).sort({ createdAt: -1 }).lean()
+}
+
 export default async function Home() {
-  const [profileDoc, aboutDoc] = await Promise.all([
+  const [profileDoc, aboutDoc, testimonials] = await Promise.all([
     getProfile(),
-    (async () => { await connectDB(); return About.findOne().lean() as any })()
+    getAbout(),
+    getTestimonials(),
   ])
 
   const profile = profileDoc
@@ -48,5 +64,5 @@ export default async function Home() {
     : undefined
   const showClients: boolean = typeof aboutDoc?.showClients === 'boolean' ? aboutDoc.showClients : true
 
-  return <HomeClient profile={profile} aboutDescription={description} aboutServices={services} aboutClients={clients} aboutShowClients={showClients} />
+  return <HomeClient profile={profile} aboutDescription={description} aboutServices={services} aboutClients={clients} aboutShowClients={showClients} testimonials={testimonials} />
 }

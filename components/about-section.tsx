@@ -99,11 +99,12 @@ interface AboutSectionProps {
   initialServices?: Service[]
   initialClients?: Client[]
   initialShowClients?: boolean
+  initialTestimonials?: { name: string; email: string; text: string; avatar?: string }[]
   onDescriptionSaved?: (desc: string[]) => void
 }
 
-export function AboutSection({ data = aboutData, isAdmin = false, initialDescription, initialServices, initialClients, initialShowClients, onDescriptionSaved }: AboutSectionProps) {
-  const [dbTestimonials, setDbTestimonials] = useState<typeof data.testimonials | null>(null)
+export function AboutSection({ data = aboutData, isAdmin = false, initialDescription, initialServices, initialClients, initialShowClients, initialTestimonials, onDescriptionSaved }: AboutSectionProps) {
+  const [dbTestimonials, setDbTestimonials] = useState<typeof data.testimonials | null>(initialTestimonials ?? null)
   const [dbDescription, setDbDescription] = useState<string[] | null>(initialDescription ?? null)
   const [dbServices, setDbServices] = useState<Service[] | null>(initialServices ?? null)
   const [editing, setEditing] = useState(false)
@@ -270,24 +271,7 @@ export function AboutSection({ data = aboutData, isAdmin = false, initialDescrip
     setClientsDraft((prev) => prev.map((c, idx) => idx === i ? { ...c, [field]: value } : c))
   }
 
-  useEffect(() => {
-    fetch('/api/admin/testimonials?status=approved')
-      .then((r) => r.json())
-      .then((d) => {
-        if (d.testimonials?.length) setDbTestimonials(d.testimonials)
-      })
-      .catch(() => {})
-    if (!initialServices || !initialClients || initialShowClients === undefined) {
-      fetch('/api/admin/about')
-        .then((r) => r.json())
-        .then(({ about }) => {
-          if (!initialServices && about?.services?.length) setDbServices(about.services)
-          if (!initialClients && about?.clients?.length) setDbClients(about.clients)
-          if (initialShowClients === undefined && typeof about?.showClients === 'boolean') setShowClients(about.showClients)
-        })
-        .catch(() => {})
-    }
-  }, [])
+
 
   const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
