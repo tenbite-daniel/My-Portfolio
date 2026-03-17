@@ -23,13 +23,14 @@ export async function PATCH(req: Request) {
     await connectDB()
 
     if (section === 'profile') {
-      const profile = await Profile.findOneAndUpdate({}, data, { upsert: true, new: true })
-      revalidateTag('profile')
+      const profile = await Profile.findOneAndUpdate({}, data, { upsert: true, returnDocument: 'after' })
+      revalidateTag('profile', 'max')
       return NextResponse.json({ profile })
     }
 
     if (section === 'site') {
-      const site = await SiteSettings.findOneAndUpdate({}, data, { upsert: true, new: true })
+      const site = await SiteSettings.findOneAndUpdate({}, data, { upsert: true, returnDocument: 'after' })
+      revalidateTag('site', 'max')
       return NextResponse.json({ site })
     }
 

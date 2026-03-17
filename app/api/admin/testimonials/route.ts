@@ -37,8 +37,8 @@ export async function PATCH(req: Request) {
   try {
     await connectDB()
     const { id, status } = await req.json()
-    const testimony = await Testimony.findByIdAndUpdate(id, { status }, { new: true })
-    if (status === 'approved') revalidateTag('testimonials')
+    const testimony = await Testimony.findByIdAndUpdate(id, { status }, { returnDocument: 'after' })
+    if (status === 'approved') revalidateTag('testimonials', 'max')
     return NextResponse.json({ testimony })
   } catch {
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })

@@ -34,6 +34,7 @@ export default function AdminPage() {
   const [activeSection, setActiveSection] = useState('dashboard')
   const [sidebarProfile, setSidebarProfile] = useState<ProfileData>(profileData)
   const [aboutDescription, setAboutDescription] = useState<string[] | null>(null)
+  const [aboutTestimonials, setAboutTestimonials] = useState<{ name: string; email: string; text: string; avatar?: string }[] | null>(null)
   const navRef = useRef<HTMLElement>(null)
   const mainRef = useRef<HTMLDivElement>(null)
 
@@ -47,6 +48,11 @@ export default function AdminPage() {
     fetch('/api/admin/about')
       .then((r) => r.json())
       .then(({ about }) => { if (about?.description?.length) setAboutDescription(about.description) })
+      .catch(() => {})
+
+    fetch('/api/admin/testimonials?status=approved')
+      .then((r) => r.json())
+      .then(({ testimonials }) => { if (testimonials?.length) setAboutTestimonials(testimonials) })
       .catch(() => {})
     const handler = (e: Event) => {
       const p = (e as CustomEvent).detail
@@ -140,7 +146,7 @@ export default function AdminPage() {
 
           <div className="p-4 sm:p-5 md:p-6 lg:p-8 space-y-8">
             {activeSection === 'dashboard' && <AdminDashboard />}
-            {activeSection === 'about' && <AboutSection data={aboutData} isAdmin initialDescription={aboutDescription ?? undefined} onDescriptionSaved={setAboutDescription} />}
+            {activeSection === 'about' && <AboutSection data={aboutData} isAdmin initialDescription={aboutDescription ?? undefined} initialTestimonials={aboutTestimonials ?? undefined} onDescriptionSaved={setAboutDescription} />}
             {activeSection === 'portfolio' && <PortfolioSection data={portfolioData} />}
             {activeSection === 'case studies' && <CaseStudiesSection />}
             {activeSection === 'blog' && <BlogSection />}

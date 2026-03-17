@@ -124,9 +124,11 @@ export function AboutSection({ data = aboutData, isAdmin = false, initialDescrip
   const [testimonyLoading, setTestimonyLoading] = useState(false)
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null)
 
-  const [cols, setCols] = useState(2)
-
   const activeTestimonials = dbTestimonials ?? data.testimonials
+
+  const GAP = 16
+  const [cols, setCols] = useState(2)
+  const [cardWidth, setCardWidth] = useState(0)
   const total = activeTestimonials.length
   const minForNav = cols === 1 ? 2 : 3
   const showNav = total >= minForNav
@@ -144,22 +146,27 @@ export function AboutSection({ data = aboutData, isAdmin = false, initialDescrip
   const [animated, setAnimated] = useState(true)
   const pauseTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const containerRef = useRef<HTMLDivElement | null>(null)
-  const [cardWidth, setCardWidth] = useState(0)
-  const GAP = 16
+
+  const calcCardWidth = useCallback(() => {
+    const node = containerRef.current
+    if (!node) return
+    const w = node.getBoundingClientRect().width
+    if (!w) return
+    const c = window.innerWidth < 480 ? 1 : 2
+    setCols(c)
+    setCardWidth((w - GAP * (c - 1)) / c)
+  }, [])
 
   const containerCallbackRef = useCallback((node: HTMLDivElement | null) => {
     if (!node) return
     containerRef.current = node
-    const measure = (w: number) => {
-      if (!w) return
-      const c = w < 480 ? 1 : 2
-      setCols(c)
-      setCardWidth((w - GAP * (c - 1)) / c)
-    }
-    measure(node.getBoundingClientRect().width)
-    const observer = new ResizeObserver(([entry]) => measure(entry.contentRect.width))
-    observer.observe(node)
-  }, [])
+    requestAnimationFrame(calcCardWidth)
+    window.addEventListener('resize', calcCardWidth)
+  }, [calcCardWidth])
+
+  useEffect(() => {
+    return () => window.removeEventListener('resize', calcCardWidth)
+  }, [calcCardWidth])
 
   const startEditing = () => {
     setParagraphs(dbDescription ?? data.description)
@@ -527,7 +534,14 @@ export function AboutSection({ data = aboutData, isAdmin = false, initialDescrip
                   <ChevronLeft className="w-4 h-4" />
                 </button>
               )}
-              <div className={`overflow-hidden ${showNav ? 'mx-4' : ''}`} ref={containerCallbackRef} style={{ visibility: cardWidth ? 'visible' : 'hidden' }}>
+              <div className={`overflow-hidden ${showNav ? 'mx-4' : ''}`} ref={containerCallbackRef}>
+                {cardWidth === 0 ? (
+                  <div className="flex" style={{ gap: `${GAP}px` }}>
+                    {Array.from({ length: cols }).map((_, i) => (
+                      <div key={i} className="flex-shrink-0 h-32 bg-secondary rounded-xl md:rounded-2xl border border-border animate-pulse" style={{ width: `calc(${100 / cols}% - ${GAP / cols}px)` }} />
+                    ))}
+                  </div>
+                ) : (
                 <div
                   className="flex"
                   style={{
@@ -560,6 +574,7 @@ export function AboutSection({ data = aboutData, isAdmin = false, initialDescrip
                     )
                   })}
                 </div>
+                )}
               </div>
               {showNav && (
                 <button

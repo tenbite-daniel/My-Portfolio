@@ -4,6 +4,7 @@ import { Analytics } from '@vercel/analytics/next'
 import { Toaster } from '@/components/ui/sonner'
 import { connectDB } from '@/lib/mongodb'
 import { SiteSettings } from '@/models/SiteSettings'
+import { cacheTag } from 'next/cache'
 import './globals.css'
 
 const poppins = Poppins({ 
@@ -12,10 +13,17 @@ const poppins = Poppins({
   variable: '--font-poppins'
 });
 
+async function getSiteSettings() {
+  'use cache'
+  cacheTag('site')
+  await connectDB()
+  const doc = await SiteSettings.findOne().lean()
+  return JSON.parse(JSON.stringify(doc))
+}
+
 export async function generateMetadata(): Promise<Metadata> {
   try {
-    await connectDB()
-    const site = await SiteSettings.findOne().lean() as any
+    const site = await getSiteSettings()
     return {
       title: site?.seoTitle || 'John Doe - Full-Stack Developer',
       description: site?.seoDescription || 'Portfolio of John Doe, a Full-Stack Developer specializing in modern web technologies',

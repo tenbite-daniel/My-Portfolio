@@ -10,21 +10,24 @@ async function getProfile() {
   'use cache'
   cacheTag('profile')
   await connectDB()
-  return Profile.findOne().lean() as any
+  const doc = await Profile.findOne().lean()
+  return JSON.parse(JSON.stringify(doc))
 }
 
 async function getAbout() {
   'use cache'
   cacheTag('about')
   await connectDB()
-  return About.findOne().lean() as any
+  const doc = await About.findOne().lean()
+  return JSON.parse(JSON.stringify(doc))
 }
 
 async function getTestimonials() {
   'use cache'
   cacheTag('testimonials')
   await connectDB()
-  return Testimony.find({ status: 'approved' }).sort({ createdAt: -1 }).lean()
+  const docs = await Testimony.find({ status: 'approved' }).sort({ createdAt: -1 }).lean()
+  return JSON.parse(JSON.stringify(docs))
 }
 
 export default async function Home() {
