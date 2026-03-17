@@ -11,6 +11,8 @@ const AboutSchema = new Schema({
     name: { type: String },
     logo: { type: String },
   }],
+  showClients: { type: Boolean, default: true },
 }, { timestamps: true })
 
-export const About = models.About || mongoose.model('About', AboutSchema)
+delete (models as Record<string, unknown>).About
+export const About = mongoose.model('About', AboutSchema)

@@ -33,6 +33,7 @@ export default function AdminPage() {
   const router = useRouter()
   const [activeSection, setActiveSection] = useState('dashboard')
   const [sidebarProfile, setSidebarProfile] = useState<ProfileData>(profileData)
+  const [aboutDescription, setAboutDescription] = useState<string[] | null>(null)
   const navRef = useRef<HTMLElement>(null)
   const mainRef = useRef<HTMLDivElement>(null)
 
@@ -42,6 +43,11 @@ export default function AdminPage() {
       .then(({ profile: p }) => {
         if (p) setSidebarProfile({ ...profileData, ...p, social: { ...profileData.social, ...p.social } })
       })
+
+    fetch('/api/admin/about')
+      .then((r) => r.json())
+      .then(({ about }) => { if (about?.description?.length) setAboutDescription(about.description) })
+      .catch(() => {})
     const handler = (e: Event) => {
       const p = (e as CustomEvent).detail
       setSidebarProfile((prev) => ({ ...prev, ...p, social: { ...prev.social, ...p.social } }))
@@ -134,7 +140,7 @@ export default function AdminPage() {
 
           <div className="p-4 sm:p-5 md:p-6 lg:p-8 space-y-8">
             {activeSection === 'dashboard' && <AdminDashboard />}
-            {activeSection === 'about' && <AboutSection data={aboutData} />}
+            {activeSection === 'about' && <AboutSection data={aboutData} isAdmin initialDescription={aboutDescription ?? undefined} onDescriptionSaved={setAboutDescription} />}
             {activeSection === 'portfolio' && <PortfolioSection data={portfolioData} />}
             {activeSection === 'case studies' && <CaseStudiesSection />}
             {activeSection === 'blog' && <BlogSection />}
