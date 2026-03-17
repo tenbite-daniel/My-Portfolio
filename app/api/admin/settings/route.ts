@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import { revalidateTag } from 'next/cache'
 import { connectDB } from '@/lib/mongodb'
 import { Profile } from '@/models/Profile'
 import { SiteSettings } from '@/models/SiteSettings'
@@ -23,6 +24,7 @@ export async function PATCH(req: Request) {
 
     if (section === 'profile') {
       const profile = await Profile.findOneAndUpdate({}, data, { upsert: true, new: true })
+      revalidateTag('profile')
       return NextResponse.json({ profile })
     }
 

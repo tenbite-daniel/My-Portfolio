@@ -3,15 +3,19 @@ import { Profile } from '@/models/Profile'
 import { About } from '@/models/About'
 import { profileData, aboutData } from '@/lib/portfolio-data'
 import { HomeClient } from '@/components/home-client'
+import { cacheTag } from 'next/cache'
 
-export const dynamic = 'force-dynamic'
+async function getProfile() {
+  'use cache'
+  cacheTag('profile')
+  await connectDB()
+  return Profile.findOne().lean() as any
+}
 
 export default async function Home() {
-  await connectDB()
-
   const [profileDoc, aboutDoc] = await Promise.all([
-    Profile.findOne().lean() as any,
-    About.findOne().lean() as any,
+    getProfile(),
+    (async () => { await connectDB(); return About.findOne().lean() as any })()
   ])
 
   const profile = profileDoc
