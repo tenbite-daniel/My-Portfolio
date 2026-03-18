@@ -1,8 +1,9 @@
 'use client'
 
 import { useState } from 'react'
-import { Calendar, Clock, ArrowRight, ArrowLeft } from 'lucide-react'
+import { Calendar, Clock, ArrowRight, ArrowLeft, EyeOff } from 'lucide-react'
 import { blogData } from '@/lib/portfolio-data'
+import { toast } from 'sonner'
 
 const mockedContent: Record<string, string> = {
   default: `
@@ -18,11 +19,32 @@ Nemo enim ipsam voluptatem quia voluptas sit aspernatur aut odit aut fugit, sed 
 
 interface BlogSectionProps {
   data?: typeof blogData
+  isAdmin?: boolean
+  initialShowBlog?: boolean
 }
 
-export function BlogSection({ data = blogData }: BlogSectionProps) {
+export function BlogSection({ data = blogData, isAdmin = false, initialShowBlog = true }: BlogSectionProps) {
   const { posts } = data
   const [selectedPost, setSelectedPost] = useState<number | null>(null)
+  const [showBlog, setShowBlog] = useState(initialShowBlog)
+  const [toggling, setToggling] = useState(false)
+
+  const toggleVisibility = async () => {
+    setToggling(true)
+    const next = !showBlog
+    const res = await fetch('/api/admin/about', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ showBlog: next }),
+    })
+    if (res.ok) {
+      setShowBlog(next)
+      toast.success(next ? 'Blog tab is now visible' : 'Blog tab is now hidden')
+    } else {
+      toast.error('Failed to update')
+    }
+    setToggling(false)
+  }
 
   if (selectedPost !== null && posts[selectedPost]) {
     const post = posts[selectedPost]
@@ -96,8 +118,33 @@ export function BlogSection({ data = blogData }: BlogSectionProps) {
   return (
     <div className="space-y-6 md:space-y-8">
       <div>
-        <h2 className="text-2xl md:text-3xl font-bold text-foreground mb-4">Blog</h2>
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-2xl md:text-3xl font-bold text-foreground">Blog</h2>
+          {isAdmin && (
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-muted-foreground">Show Tab</span>
+              <button
+                onClick={toggleVisibility}
+                disabled={toggling}
+                title={showBlog ? 'Hide from visitors' : 'Show to visitors'}
+                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none disabled:opacity-50 ${
+                  showBlog ? 'bg-accent' : 'bg-border'
+                }`}
+              >
+                <span className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform ${
+                  showBlog ? 'translate-x-6' : 'translate-x-1'
+                }`} />
+              </button>
+            </div>
+          )}
+        </div>
         <div className="w-10 h-1 bg-accent rounded-full mb-6" />
+        {isAdmin && !showBlog && (
+          <div className="flex items-center gap-2 mb-2 px-3 py-2 rounded-lg bg-muted/50 border border-dashed border-border w-fit">
+            <EyeOff className="w-3.5 h-3.5 text-muted-foreground" />
+            <span className="text-xs text-muted-foreground italic">Blog tab is hidden from visitors</span>
+          </div>
+        )}
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">

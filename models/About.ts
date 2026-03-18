@@ -13,6 +13,8 @@ const AboutSchema = new Schema({
   }],
   showClients: { type: Boolean, default: true },
   showMetrics: { type: Boolean, default: true },
+  showBlog: { type: Boolean, default: true },
+  showCaseStudies: { type: Boolean, default: true },
 }, { timestamps: true })
 
 delete (models as Record<string, unknown>).About

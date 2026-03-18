@@ -1,8 +1,9 @@
 'use client'
 
 import { caseStudiesData } from '@/lib/portfolio-data'
-import { ChevronDown } from 'lucide-react'
+import { ChevronDown, EyeOff } from 'lucide-react'
 import { useState } from 'react'
+import { toast } from 'sonner'
 
 interface CaseStudyProps {
   title: string
@@ -79,15 +80,65 @@ function CaseStudyCard({ study }: { study: CaseStudyProps }) {
   )
 }
 
-export function CaseStudiesSection() {
+interface CaseStudiesSectionProps {
+  isAdmin?: boolean
+  initialShowCaseStudies?: boolean
+}
+
+export function CaseStudiesSection({ isAdmin = false, initialShowCaseStudies = true }: CaseStudiesSectionProps) {
+  const [showCaseStudies, setShowCaseStudies] = useState(initialShowCaseStudies)
+  const [toggling, setToggling] = useState(false)
+
+  const toggleVisibility = async () => {
+    setToggling(true)
+    const next = !showCaseStudies
+    const res = await fetch('/api/admin/about', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ showCaseStudies: next }),
+    })
+    if (res.ok) {
+      setShowCaseStudies(next)
+      toast.success(next ? 'Case Studies tab is now visible' : 'Case Studies tab is now hidden')
+    } else {
+      toast.error('Failed to update')
+    }
+    setToggling(false)
+  }
+
   return (
     <section className="space-y-8">
       <div>
-        <h2 className="text-2xl md:text-3xl font-bold text-foreground mb-2">Case Studies</h2>
+        <div className="flex items-center justify-between mb-2">
+          <h2 className="text-2xl md:text-3xl font-bold text-foreground">Case Studies</h2>
+          {isAdmin && (
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-muted-foreground">Show Tab</span>
+              <button
+                onClick={toggleVisibility}
+                disabled={toggling}
+                title={showCaseStudies ? 'Hide from visitors' : 'Show to visitors'}
+                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none disabled:opacity-50 ${
+                  showCaseStudies ? 'bg-accent' : 'bg-border'
+                }`}
+              >
+                <span className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform ${
+                  showCaseStudies ? 'translate-x-6' : 'translate-x-1'
+                }`} />
+              </button>
+            </div>
+          )}
+        </div>
         <p className="text-muted-foreground text-sm md:text-base">
           Detailed breakdowns of challenging problems I've solved, my approach, and the measurable impact delivered.
           Click to expand any case study to see the full story.
         </p>
+        {isAdmin && !showCaseStudies && (
+          <div className="flex items-center gap-2 mt-3 px-3 py-2 rounded-lg bg-muted/50 border border-dashed border-border w-fit">
+            <EyeOff className="w-3.5 h-3.5 text-muted-foreground" />
+            <span className="text-xs text-muted-foreground italic">Case Studies tab is hidden from visitors</span>
+          </div>
+        )}
       </div>
 
       <div className="space-y-4">

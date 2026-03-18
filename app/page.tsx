@@ -5,7 +5,9 @@ import { Testimony } from '@/models/Testimony'
 import { Project } from '@/models/Project'
 import { profileData, aboutData } from '@/lib/portfolio-data'
 import { HomeClient } from '@/components/home-client'
+import { GitHubSection } from '@/components/github-section'
 import { cacheTag } from 'next/cache'
+import { Suspense } from 'react'
 
 async function getProfile() {
   'use cache'
@@ -77,8 +79,14 @@ export default async function Home() {
     : undefined
   const showClients: boolean = typeof aboutDoc?.showClients === 'boolean' ? aboutDoc.showClients : true
   const showMetrics: boolean = typeof aboutDoc?.showMetrics === 'boolean' ? aboutDoc.showMetrics : true
+  const showBlog: boolean = typeof aboutDoc?.showBlog === 'boolean' ? aboutDoc.showBlog : true
+  const showCaseStudies: boolean = typeof aboutDoc?.showCaseStudies === 'boolean' ? aboutDoc.showCaseStudies : true
 
   const projects = projectDocs?.length ? projectDocs : null
 
-  return <HomeClient profile={profile} aboutDescription={description} aboutServices={services} aboutClients={clients} aboutShowClients={showClients} showMetrics={showMetrics} initialProjects={projects} testimonials={testimonials} />
+  return <HomeClient profile={profile} aboutDescription={description} aboutServices={services} aboutClients={clients} aboutShowClients={showClients} showMetrics={showMetrics} showBlog={showBlog} showCaseStudies={showCaseStudies} initialProjects={projects} testimonials={testimonials} githubSection={
+    <Suspense key="github" fallback={<div className="flex items-center justify-center py-12"><p className="text-muted-foreground">Loading GitHub data...</p></div>}>
+      <GitHubSection />
+    </Suspense>
+  } />
 }
