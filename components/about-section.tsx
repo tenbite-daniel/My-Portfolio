@@ -504,7 +504,7 @@ export function AboutSection({ data = aboutData, isAdmin = false, initialDescrip
         <Dialog open={testimonyOpen} onOpenChange={setTestimonyOpen}>
           <div className="flex items-center justify-between mb-6">
             <h3 className="text-xl md:text-2xl font-bold text-foreground">Testimonials</h3>
-            {total > 0 && (
+            {total > 0 && !isAdmin && (
               <DialogTrigger asChild>
                 <button suppressHydrationWarning className="flex items-center gap-2 px-3 py-2 text-xs sm:text-sm font-medium rounded-lg bg-accent text-accent-foreground hover:opacity-90 transition-colors">
                   <MessageSquarePlus className="w-4 h-4" />
@@ -516,12 +516,14 @@ export function AboutSection({ data = aboutData, isAdmin = false, initialDescrip
           {total === 0 ? (
             <div className="bg-secondary border border-border rounded-2xl p-8 text-center space-y-4">
               <p className="text-sm text-muted-foreground">No testimonials yet. Be the first to share your experience!</p>
-              <DialogTrigger asChild>
-                <button suppressHydrationWarning className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg bg-accent text-accent-foreground hover:opacity-90 transition-colors">
-                  <MessageSquarePlus className="w-4 h-4" />
-                  Make a Testimony
-                </button>
-              </DialogTrigger>
+              {!isAdmin && (
+                <DialogTrigger asChild>
+                  <button suppressHydrationWarning className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg bg-accent text-accent-foreground hover:opacity-90 transition-colors">
+                    <MessageSquarePlus className="w-4 h-4" />
+                    Make a Testimony
+                  </button>
+                </DialogTrigger>
+              )}
             </div>
           ) : (
             <div className="relative">
