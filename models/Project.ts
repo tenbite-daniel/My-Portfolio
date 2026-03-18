@@ -5,6 +5,7 @@ const ProjectSchema = new Schema({
   category: { type: String, required: true },
   image: { type: String },
   description: { type: String },
+  bullets: [{ type: String }],
   tech: [{ type: String }],
   liveUrl: { type: String },
   githubUrl: { type: String },

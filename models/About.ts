@@ -12,6 +12,7 @@ const AboutSchema = new Schema({
     logo: { type: String },
   }],
   showClients: { type: Boolean, default: true },
+  showMetrics: { type: Boolean, default: true },
 }, { timestamps: true })
 
 delete (models as Record<string, unknown>).About

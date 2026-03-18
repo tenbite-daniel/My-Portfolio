@@ -2,6 +2,7 @@ import { connectDB } from '@/lib/mongodb'
 import { Profile } from '@/models/Profile'
 import { About } from '@/models/About'
 import { Testimony } from '@/models/Testimony'
+import { Project } from '@/models/Project'
 import { profileData, aboutData } from '@/lib/portfolio-data'
 import { HomeClient } from '@/components/home-client'
 import { cacheTag } from 'next/cache'
@@ -30,11 +31,20 @@ async function getTestimonials() {
   return JSON.parse(JSON.stringify(docs))
 }
 
+async function getProjects() {
+  'use cache'
+  cacheTag('projects')
+  await connectDB()
+  const docs = await Project.find().sort({ order: 1, createdAt: -1 }).lean()
+  return JSON.parse(JSON.stringify(docs))
+}
+
 export default async function Home() {
-  const [profileDoc, aboutDoc, testimonials] = await Promise.all([
+  const [profileDoc, aboutDoc, testimonials, projectDocs] = await Promise.all([
     getProfile(),
     getAbout(),
     getTestimonials(),
+    getProjects(),
   ])
 
   const profile = profileDoc
@@ -66,6 +76,9 @@ export default async function Home() {
     ? aboutDoc.clients.map(({ name, logo }: { name: string; logo: string }) => ({ name, logo }))
     : undefined
   const showClients: boolean = typeof aboutDoc?.showClients === 'boolean' ? aboutDoc.showClients : true
+  const showMetrics: boolean = typeof aboutDoc?.showMetrics === 'boolean' ? aboutDoc.showMetrics : true
 
-  return <HomeClient profile={profile} aboutDescription={description} aboutServices={services} aboutClients={clients} aboutShowClients={showClients} testimonials={testimonials} />
+  const projects = projectDocs?.length ? projectDocs : null
+
+  return <HomeClient profile={profile} aboutDescription={description} aboutServices={services} aboutClients={clients} aboutShowClients={showClients} showMetrics={showMetrics} initialProjects={projects} testimonials={testimonials} />
 }

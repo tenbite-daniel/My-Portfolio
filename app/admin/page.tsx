@@ -19,14 +19,13 @@ import {
   profileData,
   aboutData,
   resumeData,
-  portfolioData,
   blogData,
   contactData,
 } from '@/lib/portfolio-data'
 
 type ProfileData = typeof profileData
 
-const PUBLIC_TABS = ['about', 'portfolio', 'github', 'resume', 'blog', 'case studies', 'contact']
+const PUBLIC_TABS = ['about', 'projects', 'github', 'resume', 'blog', 'case studies', 'contact']
 const ADMIN_TABS = ['dashboard', ...PUBLIC_TABS, 'settings']
 
 export default function AdminPage() {
@@ -35,6 +34,7 @@ export default function AdminPage() {
   const [sidebarProfile, setSidebarProfile] = useState<ProfileData>(profileData)
   const [aboutDescription, setAboutDescription] = useState<string[] | null>(null)
   const [aboutTestimonials, setAboutTestimonials] = useState<{ name: string; email: string; text: string; avatar?: string }[] | null>(null)
+  const [showMetrics, setShowMetrics] = useState(true)
   const navRef = useRef<HTMLElement>(null)
   const mainRef = useRef<HTMLDivElement>(null)
 
@@ -47,7 +47,10 @@ export default function AdminPage() {
 
     fetch('/api/admin/about')
       .then((r) => r.json())
-      .then(({ about }) => { if (about?.description?.length) setAboutDescription(about.description) })
+      .then(({ about }) => {
+        if (about?.description?.length) setAboutDescription(about.description)
+        if (typeof about?.showMetrics === 'boolean') setShowMetrics(about.showMetrics)
+      })
       .catch(() => {})
 
     fetch('/api/admin/testimonials?status=approved')
@@ -147,7 +150,7 @@ export default function AdminPage() {
           <div className="p-4 sm:p-5 md:p-6 lg:p-8 space-y-8">
             {activeSection === 'dashboard' && <AdminDashboard />}
             {activeSection === 'about' && <AboutSection data={aboutData} isAdmin initialDescription={aboutDescription ?? undefined} initialTestimonials={aboutTestimonials ?? undefined} onDescriptionSaved={setAboutDescription} />}
-            {activeSection === 'portfolio' && <PortfolioSection data={portfolioData} />}
+            {activeSection === 'projects' && <PortfolioSection isAdmin initialShowMetrics={showMetrics} />}
             {activeSection === 'case studies' && <CaseStudiesSection />}
             {activeSection === 'blog' && <BlogSection />}
             {activeSection === 'github' && <GitHubSection />}
