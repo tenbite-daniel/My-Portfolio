@@ -8,10 +8,11 @@ import { PortfolioSection } from '@/components/portfolio-section'
 import { BlogSection } from '@/components/blog-section'
 import { ContactSection } from '@/components/contact-section-new'
 import { ThemeToggle } from '@/components/theme-toggle'
-import { GitHubSection } from '@/components/github-section'
 import { CaseStudiesSection } from '@/components/case-studies-section'
 import { ResumeDownload } from '@/components/resume-download'
 import { profileData, aboutData, resumeData, contactData } from '@/lib/portfolio-data'
+
+import type { ReactNode } from 'react'
 
 interface HomeClientProps {
   profile: typeof profileData
@@ -20,12 +21,16 @@ interface HomeClientProps {
   aboutClients?: { name: string; logo: string }[]
   aboutShowClients?: boolean
   showMetrics?: boolean
+  showBlog?: boolean
+  showCaseStudies?: boolean
   initialProjects?: { _id?: string; title: string; category: string; image: string; description: string; tech: string[]; liveUrl: string; githubUrl: string; metrics?: Record<string, string> }[] | null
   testimonials: { name: string; email: string; text: string; avatar?: string }[]
+  githubSection: ReactNode
 }
 
-export function HomeClient({ profile, aboutDescription, aboutServices, aboutClients, aboutShowClients, showMetrics = true, initialProjects, testimonials }: HomeClientProps) {
+export function HomeClient({ profile, aboutDescription, aboutServices, aboutClients, aboutShowClients, showMetrics = true, showBlog = true, showCaseStudies = true, initialProjects, testimonials, githubSection }: HomeClientProps) {
   const [activeSection, setActiveSection] = useState('about')
+  const publicTabs = ['about', 'projects', 'github', 'resume', ...(showBlog ? ['blog'] : []), ...(showCaseStudies ? ['case studies'] : []), 'contact']
   const navRef = useRef<HTMLElement>(null)
   const mainRef = useRef<HTMLDivElement>(null)
 
@@ -67,7 +72,7 @@ export function HomeClient({ profile, aboutDescription, aboutServices, aboutClie
             <div className="absolute -top-7 left-0 right-0 h-7 bg-background" />
             <div className="relative bg-card">
               <nav ref={navRef} className="bg-card flex items-center gap-1 sm:gap-2 md:gap-3 p-3 sm:p-4 md:p-6 overflow-x-auto scrollbar-hide">
-                {['about', 'projects', 'github', 'resume', 'blog', 'case studies', 'contact'].map((section) => (
+                {publicTabs.map((section) => (
                   <button
                     key={section}
                     data-section={section}
@@ -97,9 +102,9 @@ export function HomeClient({ profile, aboutDescription, aboutServices, aboutClie
           <div className="p-4 sm:p-5 md:p-6 lg:p-8 space-y-8">
             {activeSection === 'about' && <AboutSection data={aboutData} initialDescription={aboutDescription} initialServices={aboutServices} initialClients={aboutClients} initialShowClients={aboutShowClients} initialTestimonials={testimonials} />}
             {activeSection === 'projects' && <PortfolioSection initialShowMetrics={showMetrics} initialProjects={initialProjects} />}
-            {activeSection === 'case studies' && <CaseStudiesSection />}
-            {activeSection === 'blog' && <BlogSection />}
-            {activeSection === 'github' && <GitHubSection />}
+            {activeSection === 'case studies' && showCaseStudies && <CaseStudiesSection />}
+            {activeSection === 'blog' && showBlog && <BlogSection />}
+            {activeSection === 'github' && githubSection}
             {activeSection === 'resume' && (
               <div className="space-y-8">
                 <ResumeDownload />
