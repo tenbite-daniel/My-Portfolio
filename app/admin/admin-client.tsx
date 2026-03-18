@@ -7,7 +7,6 @@ import { AboutSection } from '@/components/about-section'
 import { ResumeSection } from '@/components/resume-section'
 import { PortfolioSection } from '@/components/portfolio-section'
 import { BlogSection } from '@/components/blog-section'
-import { ContactSection } from '@/components/contact-section-new'
 import { ThemeToggle } from '@/components/theme-toggle'
 import { AdminGitHubRepos } from '@/components/admin/github-repos'
 import { CaseStudiesSection } from '@/components/case-studies-section'
@@ -20,12 +19,11 @@ import {
   aboutData,
   resumeData,
   blogData,
-  contactData,
 } from '@/lib/portfolio-data'
 
 type ProfileData = typeof profileData
 
-const PUBLIC_TABS = ['about', 'projects', 'github', 'resume', 'blog', 'case studies', 'contact']
+const PUBLIC_TABS = ['about', 'projects', 'github', 'resume', 'blog', 'case studies']
 const ADMIN_TABS = ['dashboard', ...PUBLIC_TABS, 'settings']
 
 export function AdminPage() {
@@ -164,7 +162,6 @@ export function AdminPage() {
                 <ResumeSection data={resumeData} />
               </div>
             )}
-            {activeSection === 'contact' && <ContactSection data={contactData} />}
             {activeSection === 'settings' && <AdminSettings />}
           </div>
         </main>
