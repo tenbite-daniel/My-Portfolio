@@ -38,7 +38,10 @@ const SECTIONS = [
 const inputClass = 'w-full px-3 py-2.5 bg-secondary border border-border rounded-xl text-sm text-foreground placeholder:text-muted-foreground focus:border-accent focus:ring-2 focus:ring-accent/20 focus:outline-none transition-all'
 const labelClass = 'block text-xs font-medium text-muted-foreground mb-1.5'
 
-export function AdminSettings() {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type CacheProps = { cache?: React.MutableRefObject<Record<string, any>>; cachedFetch?: (key: string, url: string) => Promise<any>; updateCache?: (key: string, partial: Record<string, any>) => void }
+
+export function AdminSettings({ cachedFetch, updateCache }: CacheProps) {
   const router = useRouter()
   const [activeSection, setActiveSection] = useState('profile')
   const [loading, setLoading] = useState(true)
@@ -65,9 +68,11 @@ export function AdminSettings() {
   const [showPasswords, setShowPasswords] = useState({ current: false, new: false, confirm: false })
 
   useEffect(() => {
-    fetch('/api/admin/settings')
-      .then((r) => r.json())
-      .then(({ profile: p, site: s }) => {
+    const load = cachedFetch
+      ? cachedFetch('settings', '/api/admin/settings')
+      : fetch('/api/admin/settings').then(r => r.json())
+    load
+      .then(({ profile: p, site: s }: { profile: Record<string, string & { social: Record<string, string> }>; site: Record<string, string> }) => {
         if (p) {
           setProfile({ name: p.name ?? '', title: p.title ?? '', email: p.email ?? '', phone: p.phone ?? '', location: p.location ?? '', avatar: p.avatar ?? '', social: { github: p.social?.github ?? '', linkedin: p.social?.linkedin ?? '', instagram: p.social?.instagram ?? '', tiktok: p.social?.tiktok ?? '' } })
           if (p.avatar) setAvatarPreview(p.avatar)
@@ -78,7 +83,7 @@ export function AdminSettings() {
         }
       })
       .finally(() => setLoading(false))
-  }, [])
+  }, [cachedFetch])
 
   const saveProfile = async () => {
     setSaving(true)
@@ -113,6 +118,7 @@ export function AdminSettings() {
       setProfile(updatedProfile)
       setAvatarFile(null)
       toast.success('Profile saved')
+      updateCache?.('settings', { profile: updatedProfile })
       window.dispatchEvent(new CustomEvent('profile-updated', { detail: updatedProfile }))
     } else {
       toast.error('Failed to save profile')
@@ -153,6 +159,7 @@ export function AdminSettings() {
       setSite(updatedSite)
       setOgFile(null)
       toast.success('Site settings saved')
+      updateCache?.('settings', { site: updatedSite })
     } else {
       toast.error('Failed to save site settings')
     }

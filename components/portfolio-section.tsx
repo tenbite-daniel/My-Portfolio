@@ -42,9 +42,15 @@ interface PortfolioSectionProps {
   isAdmin?: boolean
   initialShowMetrics?: boolean
   initialProjects?: Project[] | null
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  cache?: React.MutableRefObject<Record<string, any>>
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  cachedFetch?: (key: string, url: string) => Promise<any>
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  updateCache?: (key: string, partial: Record<string, any>) => void
 }
 
-export function PortfolioSection({ isAdmin = false, initialShowMetrics = true, initialProjects }: PortfolioSectionProps) {
+export function PortfolioSection({ isAdmin = false, initialShowMetrics = true, initialProjects, cachedFetch, updateCache }: PortfolioSectionProps) {
   const [activeFilter, setActiveFilter] = useState('all')
   const [showMetrics, setShowMetrics] = useState(initialShowMetrics)
   const [togglingMetrics, setTogglingMetrics] = useState(false)
@@ -104,16 +110,18 @@ export function PortfolioSection({ isAdmin = false, initialShowMetrics = true, i
   useEffect(() => {
     if (!isAdmin) return
     setLoadingProjects(true)
-    fetch('/api/admin/projects')
-      .then((r) => r.json())
-      .then(({ projects }) => {
+    const load = cachedFetch
+      ? cachedFetch('projects', '/api/admin/projects')
+      : fetch('/api/admin/projects').then(r => r.json())
+    load
+      .then(({ projects }: { projects: Project[] }) => {
         setDbProjects(projects ?? [])
         const cats = ['all', ...Array.from(new Set<string>((projects ?? []).map((p: Project) => p.category).filter(Boolean)))]
         setDbCategories(cats)
       })
       .catch(() => {})
       .finally(() => setLoadingProjects(false))
-  }, [isAdmin])
+  }, [isAdmin, cachedFetch])
 
   const activeProjects = dbProjects
   const activeCategories = dbCategories
@@ -236,11 +244,14 @@ export function PortfolioSection({ isAdmin = false, initialShowMetrics = true, i
 
     if (res.ok) {
       const { project } = await res.json()
+      let updated: Project[]
       if (isNew) {
-        setDbProjects((prev) => [...prev, project])
+        updated = [...dbProjects, project]
       } else {
-        setDbProjects((prev) => prev.map((p) => (p._id === project._id ? project : p)))
+        updated = dbProjects.map((p) => (p._id === project._id ? project : p))
       }
+      setDbProjects(updated)
+      updateCache?.('projects', { projects: updated })
       setDbCategories((prev) => {
         const all = prev.filter((c) => c !== 'all')
         if (project.category && !all.includes(project.category)) all.push(project.category)
@@ -263,7 +274,9 @@ export function PortfolioSection({ isAdmin = false, initialShowMetrics = true, i
       body: JSON.stringify({ _id: project._id }),
     })
     if (res.ok) {
-      setDbProjects((prev) => prev.filter((p) => p._id !== project._id))
+      const updated = dbProjects.filter((p) => p._id !== project._id)
+      setDbProjects(updated)
+      updateCache?.('projects', { projects: updated })
       toast.success('Project deleted')
     } else {
       toast.error('Failed to delete project')

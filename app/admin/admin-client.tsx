@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { ProfileSidebar } from '@/components/profile-sidebar'
 import { AboutSection } from '@/components/about-section'
@@ -20,6 +20,8 @@ import {
 } from '@/lib/portfolio-data'
 
 type ProfileData = typeof profileData
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type CacheMap = Record<string, any>
 
 const PUBLIC_TABS = ['about', 'projects', 'github', 'resume', 'blog', 'case studies']
 const ADMIN_TABS = ['dashboard', ...PUBLIC_TABS, 'settings']
@@ -36,40 +38,55 @@ export function AdminPage() {
   const [cvUrl, setCvUrl] = useState<string | null>(null)
   const navRef = useRef<HTMLElement>(null)
   const mainRef = useRef<HTMLDivElement>(null)
+  const cache = useRef<CacheMap>({})
+
+  // Generic cached fetch — returns cached data immediately if available, otherwise fetches and caches
+  const cachedFetch = useCallback(async (key: string, url: string) => {
+    if (cache.current[key] !== undefined) return cache.current[key]
+    const res = await fetch(url)
+    const data = await res.json()
+    cache.current[key] = data
+    return data
+  }, [])
+
+  // Update a specific cache key and merge partial data
+  const updateCache = useCallback((key: string, partial: CacheMap) => {
+    cache.current[key] = { ...(cache.current[key] ?? {}), ...partial }
+  }, [])
 
   useEffect(() => {
-    fetch('/api/admin/settings')
-      .then((r) => r.json())
-      .then(({ profile: p }) => {
+    cachedFetch('settings', '/api/admin/settings')
+      .then(({ profile: p }: { profile: ProfileData }) => {
         if (p) setSidebarProfile({ ...profileData, ...p, social: { ...profileData.social, ...p.social } })
       })
+      .catch(() => {})
 
-    fetch('/api/admin/about')
-      .then((r) => r.json())
-      .then(({ about }) => {
-        if (about?.description?.length) setAboutDescription(about.description)
+    cachedFetch('about', '/api/admin/about')
+      .then(({ about }: { about: Record<string, unknown> }) => {
+        if (about?.description) setAboutDescription(about.description as string[])
         if (typeof about?.showMetrics === 'boolean') setShowMetrics(about.showMetrics)
         if (typeof about?.showBlog === 'boolean') setShowBlog(about.showBlog)
         if (typeof about?.showCaseStudies === 'boolean') setShowCaseStudies(about.showCaseStudies)
       })
       .catch(() => {})
 
-    fetch('/api/admin/resume')
-      .then((r) => r.json())
-      .then(({ cvUrl: url }) => { if (url) setCvUrl(url) })
+    cachedFetch('resume', '/api/admin/resume')
+      .then(({ cvUrl: url }: { cvUrl: string }) => { if (url) setCvUrl(url) })
       .catch(() => {})
 
-    fetch('/api/admin/testimonials?status=approved')
-      .then((r) => r.json())
-      .then(({ testimonials }) => { if (testimonials?.length) setAboutTestimonials(testimonials) })
+    cachedFetch('testimonials', '/api/admin/testimonials?status=approved')
+      .then(({ testimonials }: { testimonials: { name: string; email: string; text: string; avatar?: string }[] }) => {
+        if (testimonials?.length) setAboutTestimonials(testimonials)
+      })
       .catch(() => {})
+
     const handler = (e: Event) => {
       const p = (e as CustomEvent).detail
       setSidebarProfile((prev) => ({ ...prev, ...p, social: { ...prev.social, ...p.social } }))
     }
     window.addEventListener('profile-updated', handler)
     return () => window.removeEventListener('profile-updated', handler)
-  }, [])
+  }, [cachedFetch])
 
   const handleTabClick = (section: string) => {
     setActiveSection(section)
@@ -154,14 +171,14 @@ export function AdminPage() {
           </div>
 
           <div className="p-4 sm:p-5 md:p-6 lg:p-8 space-y-8">
-            {activeSection === 'dashboard' && <AdminDashboard />}
-            {activeSection === 'about' && <AboutSection data={aboutData} isAdmin initialDescription={aboutDescription ?? undefined} initialTestimonials={aboutTestimonials ?? undefined} onDescriptionSaved={setAboutDescription} />}
-            {activeSection === 'projects' && <PortfolioSection isAdmin initialShowMetrics={showMetrics} />}
+            {activeSection === 'dashboard' && <AdminDashboard cache={cache} cachedFetch={cachedFetch} updateCache={updateCache} />}
+            {activeSection === 'about' && <AboutSection data={aboutData} isAdmin initialDescription={aboutDescription ?? undefined} initialTestimonials={aboutTestimonials ?? undefined} onDescriptionSaved={setAboutDescription} cache={cache} cachedFetch={cachedFetch} updateCache={updateCache} />}
+            {activeSection === 'projects' && <PortfolioSection isAdmin initialShowMetrics={showMetrics} cache={cache} cachedFetch={cachedFetch} updateCache={updateCache} />}
             {activeSection === 'case studies' && <CaseStudiesSection isAdmin initialShowCaseStudies={showCaseStudies} />}
             {activeSection === 'blog' && <BlogSection isAdmin initialShowBlog={showBlog} />}
-            {activeSection === 'github' && <AdminGitHubRepos />}
-            {activeSection === 'resume' && <AdminResumeEditor onCvUrlChange={setCvUrl} />}
-            {activeSection === 'settings' && <AdminSettings />}
+            {activeSection === 'github' && <AdminGitHubRepos cache={cache} cachedFetch={cachedFetch} updateCache={updateCache} />}
+            {activeSection === 'resume' && <AdminResumeEditor onCvUrlChange={setCvUrl} cache={cache} cachedFetch={cachedFetch} updateCache={updateCache} />}
+            {activeSection === 'settings' && <AdminSettings cache={cache} cachedFetch={cachedFetch} updateCache={updateCache} />}
           </div>
         </main>
       </div>

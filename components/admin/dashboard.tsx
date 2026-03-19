@@ -30,7 +30,10 @@ const STATUS_STYLES = {
   rejected: 'bg-destructive/10 text-destructive',
 }
 
-export function AdminDashboard() {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type CacheProps = { cache: React.MutableRefObject<Record<string, any>>; cachedFetch: (key: string, url: string) => Promise<any>; updateCache: (key: string, partial: Record<string, any>) => void }
+
+export function AdminDashboard({ cachedFetch, updateCache }: CacheProps) {
   const [stats, setStats] = useState<Stats | null>(null)
   const [testimonials, setTestimonials] = useState<Testimony[]>([])
   const [loadingStats, setLoadingStats] = useState(true)
@@ -38,20 +41,18 @@ export function AdminDashboard() {
   const [actionId, setActionId] = useState<string | null>(null)
 
   const fetchStats = useCallback(async () => {
-    const res = await fetch('/api/admin/stats')
-    const data = await res.json()
+    const data = await cachedFetch('stats', '/api/admin/stats')
     setStats(data)
     setLoadingStats(false)
-  }, [])
+  }, [cachedFetch])
 
   const [filter, setFilter] = useState<'all' | 'pending' | 'approved' | 'rejected'>('all')
 
   const fetchTestimonials = useCallback(async () => {
-    const res = await fetch('/api/admin/testimonials')
-    const data = await res.json()
+    const data = await cachedFetch('all-testimonials', '/api/admin/testimonials')
     setTestimonials(data.testimonials ?? [])
     setLoadingList(false)
-  }, [])
+  }, [cachedFetch])
 
   useEffect(() => {
     fetchStats()
@@ -67,8 +68,13 @@ export function AdminDashboard() {
     })
     if (res.ok) {
       toast.success(`Testimony ${status}`)
-      setTestimonials((prev) => prev.map((t) => t._id === id ? { ...t, status } : t))
-      fetchStats()
+      const updated = testimonials.map((t) => t._id === id ? { ...t, status } : t)
+      setTestimonials(updated)
+      updateCache('all-testimonials', { testimonials: updated })
+      // refetch stats fresh
+      const statsData = await fetch('/api/admin/stats').then(r => r.json())
+      setStats(statsData)
+      updateCache('stats', statsData)
     } else {
       toast.error('Action failed')
     }
@@ -84,8 +90,12 @@ export function AdminDashboard() {
     })
     if (res.ok) {
       toast.success('Testimony deleted')
-      setTestimonials((prev) => prev.filter((t) => t._id !== id))
-      fetchStats()
+      const updated = testimonials.filter((t) => t._id !== id)
+      setTestimonials(updated)
+      updateCache('all-testimonials', { testimonials: updated })
+      const statsData = await fetch('/api/admin/stats').then(r => r.json())
+      setStats(statsData)
+      updateCache('stats', statsData)
     } else {
       toast.error('Failed to delete')
     }

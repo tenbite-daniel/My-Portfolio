@@ -148,7 +148,7 @@ function TimelineEditor({ items, onChange }: { items: TimelineItem[]; onChange: 
   )
 }
 
-function CvEditor({ cvUrl, onSaved }: { cvUrl: string | null; onSaved: (url: string) => void }) {
+function CvEditor({ cvUrl, onSaved, updateCache }: { cvUrl: string | null; onSaved: (url: string) => void; updateCache?: (key: string, partial: Record<string, unknown>) => void }) {
   const inputRef = useRef<HTMLInputElement>(null)
   const [uploading, setUploading] = useState(false)
 
@@ -169,6 +169,7 @@ function CvEditor({ cvUrl, onSaved }: { cvUrl: string | null; onSaved: (url: str
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ cvUrl: url }),
         })
+        updateCache?.('resume', { cvUrl: url })
         onSaved(url)
         toast.success('CV uploaded successfully')
       } else {
@@ -257,7 +258,10 @@ function SkillsEditor({ items, onChange }: { items: Skill[]; onChange: (items: S
   )
 }
 
-export function AdminResumeEditor({ onCvUrlChange }: { onCvUrlChange?: (url: string) => void } = {}) {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type CacheProps = { cache?: React.MutableRefObject<Record<string, any>>; cachedFetch?: (key: string, url: string) => Promise<any>; updateCache?: (key: string, partial: Record<string, any>) => void }
+
+export function AdminResumeEditor({ onCvUrlChange, cachedFetch, updateCache }: { onCvUrlChange?: (url: string) => void } & CacheProps) {
   const [experience, setExperience] = useState<TimelineItem[]>([])
   const [education, setEducation] = useState<TimelineItem[]>([])
   const [skills, setSkills] = useState<Skill[]>([])
@@ -266,9 +270,11 @@ export function AdminResumeEditor({ onCvUrlChange }: { onCvUrlChange?: (url: str
   const [saving, setSaving] = useState<'experience' | 'education' | 'skills' | null>(null)
 
   useEffect(() => {
-    fetch('/api/admin/resume')
-      .then((r) => r.json())
-      .then(({ experience: e, education: ed, skills: s, cvUrl: url }) => {
+    const load = cachedFetch
+      ? cachedFetch('resume', '/api/admin/resume')
+      : fetch('/api/admin/resume').then(r => r.json())
+    load
+      .then(({ experience: e, education: ed, skills: s, cvUrl: url }: { experience: TimelineItem[]; education: TimelineItem[]; skills: Skill[]; cvUrl: string }) => {
         setExperience(e ?? [])
         setEducation(ed ?? [])
         setSkills(s ?? [])
@@ -276,7 +282,7 @@ export function AdminResumeEditor({ onCvUrlChange }: { onCvUrlChange?: (url: str
         setLoading(false)
       })
       .catch(() => setLoading(false))
-  }, [])
+  }, [cachedFetch])
 
   const save = async (section: 'experience' | 'education' | 'skills', data: unknown) => {
     setSaving(section)
@@ -285,8 +291,13 @@ export function AdminResumeEditor({ onCvUrlChange }: { onCvUrlChange?: (url: str
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ [section]: data }),
     })
+    if (res.ok) {
+      updateCache?.('resume', { [section]: data })
+      toast.success(`${section.charAt(0).toUpperCase() + section.slice(1)} saved`)
+    } else {
+      toast.error('Failed to save')
+    }
     setSaving(null)
-    res.ok ? toast.success(`${section.charAt(0).toUpperCase() + section.slice(1)} saved`) : toast.error('Failed to save')
   }
 
   if (loading) return <p className="text-muted-foreground text-sm">Loading resume data...</p>
@@ -294,7 +305,7 @@ export function AdminResumeEditor({ onCvUrlChange }: { onCvUrlChange?: (url: str
   return (
     <div className="space-y-8">
       {/* CV Upload */}
-      <CvEditor cvUrl={cvUrl} onSaved={(url) => { setCvUrl(url); onCvUrlChange?.(url) }} />
+      <CvEditor cvUrl={cvUrl} onSaved={(url) => { setCvUrl(url); onCvUrlChange?.(url) }} updateCache={updateCache} />
 
       {/* Experience */}
       <div className="bg-card border border-border rounded-xl p-5">

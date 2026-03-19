@@ -23,7 +23,10 @@ interface Repo {
   stargazers_count: number
 }
 
-export function AdminGitHubRepos() {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type CacheProps = { cache: React.MutableRefObject<Record<string, any>>; cachedFetch: (key: string, url: string) => Promise<any>; updateCache: (key: string, partial: Record<string, any>) => void }
+
+export function AdminGitHubRepos({ cachedFetch, updateCache }: CacheProps) {
   const [repos, setRepos] = useState<Repo[]>([])
   const [selected, setSelected] = useState<Set<string>>(new Set())
   const [savedSet, setSavedSet] = useState<Set<string>>(new Set())
@@ -36,9 +39,8 @@ export function AdminGitHubRepos() {
   useEffect(() => { setPage(0) }, [pageSize])
 
   useEffect(() => {
-    fetch('/api/admin/github')
-      .then((r) => r.json())
-      .then(({ repos: r, selected: s }) => {
+    cachedFetch('github-repos', '/api/admin/github')
+      .then(({ repos: r, selected: s }: { repos: Repo[]; selected: string[] }) => {
         setRepos(r ?? [])
         const initial = new Set<string>(s ?? [])
         setSelected(initial)
@@ -46,7 +48,7 @@ export function AdminGitHubRepos() {
         setLoading(false)
       })
       .catch(() => setLoading(false))
-  }, [])
+  }, [cachedFetch])
 
   const totalPages = Math.ceil(repos.length / pageSize)
   const startIdx = page * pageSize
@@ -79,6 +81,7 @@ export function AdminGitHubRepos() {
     })
     setSaving(false)
     setSavedSet(new Set(selected))
+    updateCache('github-repos', { selected: Array.from(selected) })
     setSaveStatus('saved')
     setTimeout(() => setSaveStatus('idle'), 2000)
   }
