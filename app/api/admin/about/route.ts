@@ -24,7 +24,7 @@ export async function PATCH(req: Request) {
       { $set: body },
       { upsert: true, returnDocument: 'after' }
     )
-    revalidateTag('about', 'max')
+    revalidateTag('about')
     return NextResponse.json({ about: result })
   } catch {
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })

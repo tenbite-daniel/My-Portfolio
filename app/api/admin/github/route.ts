@@ -27,7 +27,7 @@ export async function POST(req: Request) {
         selected.map((repoName, order) => ({ repoName, order }))
       )
     }
-    revalidateTag('featured-repos', 'max')
+    revalidateTag('featured-repos')
     return NextResponse.json({ success: true })
   } catch {
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })

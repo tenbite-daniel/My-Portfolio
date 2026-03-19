@@ -24,7 +24,7 @@ export async function PATCH(req: Request) {
     const body = await req.json()
     await connectDB()
     await Resume.findOneAndUpdate({}, { $set: body }, { upsert: true, new: true })
-    revalidateTag('resume', 'max')
+    revalidateTag('resume')
     return NextResponse.json({ success: true })
   } catch {
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
