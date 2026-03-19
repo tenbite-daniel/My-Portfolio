@@ -10,7 +10,7 @@ import { ContactSection } from '@/components/contact-section-new'
 import { ThemeToggle } from '@/components/theme-toggle'
 import { CaseStudiesSection } from '@/components/case-studies-section'
 import { ResumeDownload } from '@/components/resume-download'
-import { profileData, aboutData, resumeData, contactData } from '@/lib/portfolio-data'
+import { profileData, aboutData, contactData } from '@/lib/portfolio-data'
 
 import type { ReactNode } from 'react'
 
@@ -25,11 +25,13 @@ interface HomeClientProps {
   showCaseStudies?: boolean
   initialProjects?: { _id?: string; title: string; category: string; image: string; description: string; tech: string[]; liveUrl: string; githubUrl: string; metrics?: Record<string, string> }[] | null
   testimonials: { name: string; email: string; text: string; avatar?: string }[]
+  resumeData?: { experience: { title: string; period: string; description: string }[]; education: { title: string; period: string; description: string }[]; skills: { name: string; level: number }[]; cvUrl?: string | null }
   githubSection: ReactNode
 }
 
-export function HomeClient({ profile, aboutDescription, aboutServices, aboutClients, aboutShowClients, showMetrics = true, showBlog = true, showCaseStudies = true, initialProjects, testimonials, githubSection }: HomeClientProps) {
+export function HomeClient({ profile, aboutDescription, aboutServices, aboutClients, aboutShowClients, showMetrics = true, showBlog = true, showCaseStudies = true, initialProjects, testimonials, resumeData: resumeDoc, githubSection }: HomeClientProps) {
   const [activeSection, setActiveSection] = useState('about')
+  const cvUrl = resumeDoc?.cvUrl ?? null
   const publicTabs = ['about', 'projects', 'github', 'resume', ...(showBlog ? ['blog'] : []), ...(showCaseStudies ? ['case studies'] : []), 'contact']
   const navRef = useRef<HTMLElement>(null)
   const mainRef = useRef<HTMLDivElement>(null)
@@ -87,10 +89,10 @@ export function HomeClient({ profile, aboutDescription, aboutServices, aboutClie
                   </button>
                 ))}
                 <a
-                  href="/resume.pdf"
+                  href={cvUrl ? '/api/resume-cv?preview=1' : undefined}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="ml-auto flex-shrink-0 px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-medium whitespace-nowrap bg-accent text-accent-foreground hover:opacity-90 transition-opacity"
+                  className={`ml-auto flex-shrink-0 px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-medium whitespace-nowrap bg-accent text-accent-foreground transition-opacity ${!cvUrl ? 'opacity-40 pointer-events-none' : 'hover:opacity-90'}`}
                 >
                   Preview Resume
                 </a>
@@ -107,8 +109,8 @@ export function HomeClient({ profile, aboutDescription, aboutServices, aboutClie
             {activeSection === 'github' && githubSection}
             {activeSection === 'resume' && (
               <div className="space-y-8">
-                <ResumeDownload />
-                <ResumeSection data={resumeData} />
+                <ResumeDownload cvUrl={cvUrl} />
+                <ResumeSection data={resumeDoc} />
               </div>
             )}
             {activeSection === 'contact' && <ContactSection data={contactData} />}

@@ -3,7 +3,8 @@ import { Profile } from '@/models/Profile'
 import { About } from '@/models/About'
 import { Testimony } from '@/models/Testimony'
 import { Project } from '@/models/Project'
-import { profileData, aboutData } from '@/lib/portfolio-data'
+import { Resume } from '@/models/Resume'
+import { profileData, aboutData, resumeData } from '@/lib/portfolio-data'
 import { HomeClient } from '@/components/home-client'
 import { GitHubSection } from '@/components/github-section'
 import { cacheTag } from 'next/cache'
@@ -33,6 +34,20 @@ async function getTestimonials() {
   return JSON.parse(JSON.stringify(docs))
 }
 
+async function getResume() {
+  'use cache'
+  cacheTag('resume')
+  await connectDB()
+  const doc = await Resume.findOne().lean() as Record<string, unknown> | null
+  const plain = doc ? JSON.parse(JSON.stringify(doc)) : null
+  return {
+    experience: plain?.experience ?? resumeData.experience,
+    education: plain?.education ?? resumeData.education,
+    skills: plain?.skills ?? resumeData.skills,
+    cvUrl: plain?.cvUrl ?? null,
+  }
+}
+
 async function getProjects() {
   'use cache'
   cacheTag('projects')
@@ -42,11 +57,12 @@ async function getProjects() {
 }
 
 export default async function Home() {
-  const [profileDoc, aboutDoc, testimonials, projectDocs] = await Promise.all([
+  const [profileDoc, aboutDoc, testimonials, projectDocs, resumeDoc] = await Promise.all([
     getProfile(),
     getAbout(),
     getTestimonials(),
     getProjects(),
+    getResume(),
   ])
 
   const profile = profileDoc
@@ -84,7 +100,7 @@ export default async function Home() {
 
   const projects = projectDocs?.length ? projectDocs : null
 
-  return <HomeClient profile={profile} aboutDescription={description} aboutServices={services} aboutClients={clients} aboutShowClients={showClients} showMetrics={showMetrics} showBlog={showBlog} showCaseStudies={showCaseStudies} initialProjects={projects} testimonials={testimonials} githubSection={
+  return <HomeClient profile={profile} aboutDescription={description} aboutServices={services} aboutClients={clients} aboutShowClients={showClients} showMetrics={showMetrics} showBlog={showBlog} showCaseStudies={showCaseStudies} initialProjects={projects} testimonials={testimonials} resumeData={resumeDoc} githubSection={
     <Suspense key="github" fallback={<div className="flex items-center justify-center py-12"><p className="text-muted-foreground">Loading GitHub data...</p></div>}>
       <GitHubSection />
     </Suspense>

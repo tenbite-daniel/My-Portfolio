@@ -18,7 +18,7 @@ export async function POST(req: Request) {
     const body = await req.json()
     await connectDB()
     const project = await Project.create(body)
-    revalidateTag('projects')
+    revalidateTag('projects', 'max')
     return NextResponse.json({ project })
   } catch {
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
@@ -30,7 +30,7 @@ export async function PATCH(req: Request) {
     const { _id, ...body } = await req.json()
     await connectDB()
     const project = await Project.findByIdAndUpdate(_id, { $set: body }, { new: true })
-    revalidateTag('projects')
+    revalidateTag('projects', 'max')
     return NextResponse.json({ project })
   } catch {
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
@@ -42,7 +42,7 @@ export async function DELETE(req: Request) {
     const { _id } = await req.json()
     await connectDB()
     await Project.findByIdAndDelete(_id)
-    revalidateTag('projects')
+    revalidateTag('projects', 'max')
     return NextResponse.json({ success: true })
   } catch {
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
