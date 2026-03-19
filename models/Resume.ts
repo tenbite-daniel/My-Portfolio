@@ -15,6 +15,7 @@ const ResumeSchema = new Schema({
     name: { type: String },
     level: { type: Number },
   }],
+  cvUrl: { type: String },
 }, { timestamps: true })
 
 export const Resume = models.Resume || mongoose.model('Resume', ResumeSchema)
