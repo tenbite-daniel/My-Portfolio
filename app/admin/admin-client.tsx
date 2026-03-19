@@ -4,20 +4,18 @@ import { useState, useRef, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { ProfileSidebar } from '@/components/profile-sidebar'
 import { AboutSection } from '@/components/about-section'
-import { ResumeSection } from '@/components/resume-section'
 import { PortfolioSection } from '@/components/portfolio-section'
 import { BlogSection } from '@/components/blog-section'
 import { ThemeToggle } from '@/components/theme-toggle'
 import { AdminGitHubRepos } from '@/components/admin/github-repos'
 import { CaseStudiesSection } from '@/components/case-studies-section'
-import { ResumeDownload } from '@/components/resume-download'
+import { AdminResumeEditor } from '@/components/admin/resume-editor'
 import { AdminDashboard } from '@/components/admin/dashboard'
 import { AdminSettings } from '@/components/admin/settings'
 import { LogOut } from 'lucide-react'
 import {
   profileData,
   aboutData,
-  resumeData,
   blogData,
 } from '@/lib/portfolio-data'
 
@@ -35,6 +33,7 @@ export function AdminPage() {
   const [showMetrics, setShowMetrics] = useState(true)
   const [showBlog, setShowBlog] = useState(true)
   const [showCaseStudies, setShowCaseStudies] = useState(true)
+  const [cvUrl, setCvUrl] = useState<string | null>(null)
   const navRef = useRef<HTMLElement>(null)
   const mainRef = useRef<HTMLDivElement>(null)
 
@@ -53,6 +52,11 @@ export function AdminPage() {
         if (typeof about?.showBlog === 'boolean') setShowBlog(about.showBlog)
         if (typeof about?.showCaseStudies === 'boolean') setShowCaseStudies(about.showCaseStudies)
       })
+      .catch(() => {})
+
+    fetch('/api/admin/resume')
+      .then((r) => r.json())
+      .then(({ cvUrl: url }) => { if (url) setCvUrl(url) })
       .catch(() => {})
 
     fetch('/api/admin/testimonials?status=approved')
@@ -137,10 +141,10 @@ export function AdminPage() {
                   </button>
                 ))}
                 <a
-                  href="/resume.pdf"
+                  href={cvUrl ? '/api/resume-cv?preview=1' : undefined}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="ml-auto flex-shrink-0 px-3 py-2 rounded-lg text-xs font-medium whitespace-nowrap bg-accent text-accent-foreground hover:opacity-90 transition-opacity"
+                  className={`ml-auto flex-shrink-0 px-3 py-2 rounded-lg text-xs font-medium whitespace-nowrap bg-accent text-accent-foreground transition-opacity ${!cvUrl ? 'opacity-40 pointer-events-none' : 'hover:opacity-90'}`}
                 >
                   Preview Resume
                 </a>
@@ -156,12 +160,7 @@ export function AdminPage() {
             {activeSection === 'case studies' && <CaseStudiesSection isAdmin initialShowCaseStudies={showCaseStudies} />}
             {activeSection === 'blog' && <BlogSection isAdmin initialShowBlog={showBlog} />}
             {activeSection === 'github' && <AdminGitHubRepos />}
-            {activeSection === 'resume' && (
-              <div className="space-y-8">
-                <ResumeDownload />
-                <ResumeSection data={resumeData} />
-              </div>
-            )}
+            {activeSection === 'resume' && <AdminResumeEditor onCvUrlChange={setCvUrl} />}
             {activeSection === 'settings' && <AdminSettings />}
           </div>
         </main>
