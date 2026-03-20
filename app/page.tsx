@@ -100,9 +100,13 @@ export default async function Home() {
 
   const projects = projectDocs?.length ? projectDocs : null
 
-  return <HomeClient profile={profile} aboutDescription={description} aboutServices={services} aboutClients={clients} aboutShowClients={showClients} showMetrics={showMetrics} showBlog={showBlog} showCaseStudies={showCaseStudies} initialProjects={projects} testimonials={testimonials} resumeData={resumeDoc} githubSection={
-    <Suspense key="github" fallback={<div className="flex items-center justify-center py-12"><p className="text-muted-foreground">Loading GitHub data...</p></div>}>
-      <GitHubSection />
+  return (
+    <Suspense>
+      <HomeClient profile={profile} aboutDescription={description} aboutServices={services} aboutClients={clients} aboutShowClients={showClients} showMetrics={showMetrics} showBlog={showBlog} showCaseStudies={showCaseStudies} initialProjects={projects} testimonials={testimonials} resumeData={resumeDoc} githubSection={
+        <Suspense key="github" fallback={<div className="flex items-center justify-center py-12"><p className="text-muted-foreground">Loading GitHub data...</p></div>}>
+          <GitHubSection />
+        </Suspense>
+      } />
     </Suspense>
-  } />
+  )
 }

@@ -1,6 +1,7 @@
 'use client'
 
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { ProfileSidebar } from '@/components/profile-sidebar'
 import { AboutSection } from '@/components/about-section'
 import { ResumeSection } from '@/components/resume-section'
@@ -30,14 +31,27 @@ interface HomeClientProps {
 }
 
 export function HomeClient({ profile, aboutDescription, aboutServices, aboutClients, aboutShowClients, showMetrics = true, showBlog = true, showCaseStudies = true, initialProjects, testimonials, resumeData: resumeDoc, githubSection }: HomeClientProps) {
-  const [activeSection, setActiveSection] = useState('about')
+  const router = useRouter()
+  const searchParams = useSearchParams()
+  const [activeSection, setActiveSection] = useState(() => searchParams.get('tab') ?? 'about')
+  const [activePostSlug, setActivePostSlug] = useState<string | null>(() => searchParams.get('post'))
   const cvUrl = resumeDoc?.cvUrl ?? null
   const publicTabs = ['about', 'projects', 'github', 'resume', ...(showBlog ? ['blog'] : []), ...(showCaseStudies ? ['case studies'] : []), 'contact']
   const navRef = useRef<HTMLElement>(null)
   const mainRef = useRef<HTMLDivElement>(null)
 
+  const updateUrl = (tab: string, post?: string | null) => {
+    const params = new URLSearchParams()
+    if (tab !== 'about') params.set('tab', tab)
+    if (post) params.set('post', post)
+    const qs = params.toString()
+    router.replace(qs ? `?${qs}` : '/', { scroll: false })
+  }
+
   const handleTabClick = (section: string) => {
     setActiveSection(section)
+    setActivePostSlug(null)
+    updateUrl(section)
     const nav = navRef.current
     if (nav) {
       const btn = nav.querySelector(`[data-section="${section}"]`) as HTMLElement
@@ -50,6 +64,18 @@ export function HomeClient({ profile, aboutDescription, aboutServices, aboutClie
       window.scrollTo({ top, behavior: 'smooth' })
     }, 50)
   }
+
+  const handlePostSelect = (slug: string | null) => {
+    setActivePostSlug(slug)
+    updateUrl(activeSection, slug)
+  }
+
+  useEffect(() => {
+    const tab = searchParams.get('tab') ?? 'about'
+    const post = searchParams.get('post')
+    setActiveSection(tab)
+    setActivePostSlug(post)
+  }, [searchParams])
 
   return (
     <div className="min-h-screen bg-background p-3 sm:p-4 md:p-6 lg:py-6 lg:pr-6 lg:pl-[22rem]">
@@ -105,7 +131,7 @@ export function HomeClient({ profile, aboutDescription, aboutServices, aboutClie
             {activeSection === 'about' && <AboutSection data={aboutData} initialDescription={aboutDescription} initialServices={aboutServices} initialClients={aboutClients} initialShowClients={aboutShowClients} initialTestimonials={testimonials} />}
             {activeSection === 'projects' && <PortfolioSection initialShowMetrics={showMetrics} initialProjects={initialProjects} />}
             {activeSection === 'case studies' && showCaseStudies && <CaseStudiesSection />}
-            {activeSection === 'blog' && showBlog && <BlogSection />}
+            {activeSection === 'blog' && showBlog && <BlogSection activePostSlug={activePostSlug} onPostSelect={handlePostSelect} />}
             {activeSection === 'github' && githubSection}
             {activeSection === 'resume' && (
               <div className="space-y-8">

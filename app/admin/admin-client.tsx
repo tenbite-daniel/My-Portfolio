@@ -175,7 +175,7 @@ export function AdminPage() {
             {activeSection === 'about' && <AboutSection data={aboutData} isAdmin initialDescription={aboutDescription ?? undefined} initialTestimonials={aboutTestimonials ?? undefined} onDescriptionSaved={setAboutDescription} cache={cache} cachedFetch={cachedFetch} updateCache={updateCache} />}
             {activeSection === 'projects' && <PortfolioSection isAdmin initialShowMetrics={showMetrics} cache={cache} cachedFetch={cachedFetch} updateCache={updateCache} />}
             {activeSection === 'case studies' && <CaseStudiesSection isAdmin initialShowCaseStudies={showCaseStudies} />}
-            {activeSection === 'blog' && <BlogSection isAdmin initialShowBlog={showBlog} />}
+            {activeSection === 'blog' && <BlogSection isAdmin initialShowBlog={showBlog} cache={cache} cachedFetch={cachedFetch} updateCache={updateCache} />}
             {activeSection === 'github' && <AdminGitHubRepos cache={cache} cachedFetch={cachedFetch} updateCache={updateCache} />}
             {activeSection === 'resume' && <AdminResumeEditor onCvUrlChange={setCvUrl} cache={cache} cachedFetch={cachedFetch} updateCache={updateCache} />}
             {activeSection === 'settings' && <AdminSettings cache={cache} cachedFetch={cachedFetch} updateCache={updateCache} />}
