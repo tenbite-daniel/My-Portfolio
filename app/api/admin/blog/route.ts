@@ -10,7 +10,11 @@ export async function GET(req: Request) {
     const isPublic = searchParams.get('public') === '1'
     const now = new Date()
 
-    const query = isPublic
+    const isScheduled = searchParams.get('scheduled') === '1'
+
+    const query = isScheduled
+      ? { scheduledAt: { $gt: now } }
+      : isPublic
       ? { $or: [{ published: true, scheduledAt: null }, { published: true, scheduledAt: { $lte: now } }, { scheduledAt: { $lte: now } }] }
       : {}
 

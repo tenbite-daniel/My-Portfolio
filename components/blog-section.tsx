@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { EyeOff, Pencil, Plus, Trash2, Loader2, Check, X, Upload, ArrowLeft, Calendar, Clock, ArrowRight, Share2, CalendarIcon } from 'lucide-react'
 import { toast } from 'sonner'
+import { BlogFeaturedSlider } from '@/components/blog-featured-slider'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { Calendar as CalendarPicker } from '@/components/ui/calendar'
@@ -77,6 +78,8 @@ export function BlogSection({ isAdmin = false, initialShowBlog = true, activePos
     return () => window.removeEventListener('resize', update)
   }, [])
 
+  const [activeCategory, setActiveCategory] = useState<string>('All')
+  const [activeTab, setActiveTab] = useState<'drafted' | 'published' | 'scheduled'>('published')
   const [selectedPost, setSelectedPost] = useState<Post | null>(null)
   const [editingPost, setEditingPost] = useState<Post | null>(null)
   const [isNew, setIsNew] = useState(false)
@@ -387,6 +390,69 @@ export function BlogSection({ isAdmin = false, initialShowBlog = true, activePos
         )}
       </div>
 
+      {!loading && posts.length > 0 && (
+        <BlogFeaturedSlider onPostSelect={(slug) => {
+          const match = posts.find(p => p.slug === slug)
+          if (match) selectPost(match)
+        }} />
+      )}
+
+      {!loading && posts.length > 0 && (() => {
+        const categories = ['All', ...Array.from(new Set(posts.map(p => p.category).filter(Boolean)))]
+        return categories.length > 2 ? (
+          <div className="flex flex-wrap gap-2">
+            {categories.map(cat => (
+              <button
+                key={cat}
+                onClick={() => { setActiveCategory(cat); setPage(1) }}
+                className={`px-3 py-1.5 text-xs font-medium rounded-full border transition-colors ${
+                  activeCategory === cat
+                    ? 'bg-accent text-accent-foreground border-accent'
+                    : 'bg-secondary text-muted-foreground border-border hover:border-accent'
+                }`}
+              >
+                {cat}
+              </button>
+            ))}
+          </div>
+        ) : null
+      })()}
+
+      {isAdmin && !loading && (
+        <div className="flex w-full rounded-xl overflow-hidden border border-border">
+          {(['published', 'scheduled', 'drafted'] as const).map((tab) => {
+            const now = new Date()
+            const count = tab === 'published'
+              ? posts.filter(p => p.published || (!!p.scheduledAt && new Date(p.scheduledAt) <= now)).length
+              : tab === 'scheduled'
+              ? posts.filter(p => !!p.scheduledAt && new Date(p.scheduledAt) > now).length
+              : posts.filter(p => !p.published && !p.scheduledAt).length
+            return (
+              <button
+                key={tab}
+                onClick={() => { setActiveTab(tab); setPage(1) }}
+                className={`flex-1 py-2.5 text-xs font-medium capitalize transition-colors flex items-center justify-center gap-1.5 ${
+                  activeTab === tab
+                    ? tab === 'published' ? 'bg-green-500/10 text-green-500'
+                    : tab === 'scheduled' ? 'bg-blue-500/10 text-blue-500'
+                    : 'bg-yellow-500/10 text-yellow-500'
+                    : 'bg-secondary text-muted-foreground hover:text-foreground'
+                }`}
+              >
+                {tab}
+                <span className={`px-1.5 py-0.5 rounded-full text-[10px] font-semibold ${
+                  activeTab === tab
+                    ? tab === 'published' ? 'bg-green-500/20'
+                    : tab === 'scheduled' ? 'bg-blue-500/20'
+                    : 'bg-yellow-500/20'
+                    : 'bg-border'
+                }`}>{count}</span>
+              </button>
+            )
+          })}
+        </div>
+      )}
+
       {loading ? (
         <div className="flex items-center justify-center py-12">
           <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
@@ -398,7 +464,15 @@ export function BlogSection({ isAdmin = false, initialShowBlog = true, activePos
       ) : (
         <>
         <div ref={listTopRef} className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
-          {posts.slice((page - 1) * postsPerPage, page * postsPerPage).map((post, index) => (
+          {posts.filter(p => {
+            const now = new Date()
+            const tabMatch = !isAdmin || (
+              activeTab === 'published' ? p.published || (!!p.scheduledAt && new Date(p.scheduledAt) <= now)
+              : activeTab === 'scheduled' ? !!p.scheduledAt && new Date(p.scheduledAt) > now
+              : !p.published && !p.scheduledAt
+            )
+            return tabMatch && (activeCategory === 'All' || p.category === activeCategory)
+          }).slice((page - 1) * postsPerPage, page * postsPerPage).map((post, index) => (
             <article
               key={post._id ?? index}
               className="group bg-secondary rounded-xl md:rounded-2xl border border-border overflow-hidden hover:border-accent hover:shadow-lg hover:shadow-accent/10 transition-all duration-300 flex flex-col"
@@ -472,7 +546,17 @@ export function BlogSection({ isAdmin = false, initialShowBlog = true, activePos
             </article>
           ))}
         </div>
-        {Math.ceil(posts.length / postsPerPage) > 1 && (
+        {(() => {
+          const now = new Date()
+          const filtered = posts.filter(p => {
+            const tabMatch = !isAdmin || (
+              activeTab === 'published' ? p.published || (!!p.scheduledAt && new Date(p.scheduledAt) <= now)
+              : activeTab === 'scheduled' ? !!p.scheduledAt && new Date(p.scheduledAt) > now
+              : !p.published && !p.scheduledAt
+            )
+            return tabMatch && (activeCategory === 'All' || p.category === activeCategory)
+          })
+          return Math.ceil(filtered.length / postsPerPage) > 1 ? (
           <div className="flex items-center justify-center gap-2 mt-6">
             <button
               onClick={() => goToPage(Math.max(1, page - 1))}
@@ -481,7 +565,7 @@ export function BlogSection({ isAdmin = false, initialShowBlog = true, activePos
             >
               Previous
             </button>
-            {Array.from({ length: Math.ceil(posts.length / postsPerPage) }, (_, i) => i + 1).map(n => (
+            {Array.from({ length: Math.ceil(filtered.length / postsPerPage) }, (_, i) => i + 1).map(n => (
               <button
                 key={n}
                 onClick={() => goToPage(n)}
@@ -493,14 +577,15 @@ export function BlogSection({ isAdmin = false, initialShowBlog = true, activePos
               </button>
             ))}
             <button
-              onClick={() => goToPage(Math.min(Math.ceil(posts.length / postsPerPage), page + 1))}
-              disabled={page === Math.ceil(posts.length / postsPerPage)}
+              onClick={() => goToPage(Math.min(Math.ceil(filtered.length / postsPerPage), page + 1))}
+              disabled={page === Math.ceil(filtered.length / postsPerPage)}
               className="px-3 py-1.5 text-sm rounded-lg bg-secondary border border-border hover:border-accent disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
             >
               Next
             </button>
           </div>
-        )}
+          ) : null
+        })()}
       </>
       )}
 
