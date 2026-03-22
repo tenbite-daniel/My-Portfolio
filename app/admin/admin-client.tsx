@@ -12,6 +12,7 @@ import { CaseStudiesSection } from '@/components/case-studies-section'
 import { AdminResumeEditor } from '@/components/admin/resume-editor'
 import { AdminDashboard } from '@/components/admin/dashboard'
 import { AdminSettings } from '@/components/admin/settings'
+import { AdminContacts } from '@/components/admin/contacts'
 import { LogOut } from 'lucide-react'
 import {
   profileData,
@@ -24,7 +25,7 @@ type ProfileData = typeof profileData
 type CacheMap = Record<string, any>
 
 const PUBLIC_TABS = ['about', 'projects', 'github', 'resume', 'blog', 'case studies']
-const ADMIN_TABS = ['dashboard', ...PUBLIC_TABS, 'settings']
+const ADMIN_TABS = ['dashboard', ...PUBLIC_TABS, 'contacts', 'settings']
 
 export function AdminPage() {
   const router = useRouter()
@@ -37,6 +38,7 @@ export function AdminPage() {
   const [showCaseStudies, setShowCaseStudies] = useState(true)
   const [showKeyOutcomes, setShowKeyOutcomes] = useState(true)
   const [cvUrl, setCvUrl] = useState<string | null>(null)
+  const [contactsUnread, setContactsUnread] = useState(0)
   const navRef = useRef<HTMLElement>(null)
   const mainRef = useRef<HTMLDivElement>(null)
   const cache = useRef<CacheMap>({})
@@ -146,7 +148,7 @@ export function AdminPage() {
                     key={section}
                     data-section={section}
                     onClick={() => handleTabClick(section)}
-                    className={`px-2 py-1.5 rounded-lg text-xs md:text-sm font-medium capitalize transition-colors whitespace-nowrap flex-shrink-0 ${
+                    className={`relative px-2 py-1.5 rounded-lg text-xs md:text-sm font-medium capitalize transition-colors whitespace-nowrap flex-shrink-0 ${
                       section === 'dashboard'
                         ? activeSection === section
                           ? 'text-accent-foreground bg-accent'
@@ -157,6 +159,11 @@ export function AdminPage() {
                     }`}
                   >
                     {section}
+                    {section === 'contacts' && contactsUnread > 0 && (
+                      <span className="absolute -top-1 -right-1 min-w-[16px] h-4 px-1 rounded-full bg-red-500 text-white text-[10px] font-bold flex items-center justify-center leading-none">
+                        {contactsUnread}
+                      </span>
+                    )}
                   </button>
                 ))}
                 <a
@@ -174,13 +181,14 @@ export function AdminPage() {
 
           <div className="p-4 sm:p-5 md:p-6 lg:p-8 space-y-8">
             {activeSection === 'dashboard' && <AdminDashboard cache={cache} cachedFetch={cachedFetch} updateCache={updateCache} />}
-            {activeSection === 'about' && <AboutSection data={aboutData} isAdmin initialDescription={aboutDescription ?? undefined} initialTestimonials={aboutTestimonials ?? undefined} onDescriptionSaved={setAboutDescription} cache={cache} cachedFetch={cachedFetch} updateCache={updateCache} />}
+            {activeSection === 'about' && <AboutSection data={aboutData} isAdmin initialDescription={aboutDescription ?? undefined} initialTestimonials={aboutTestimonials ?? undefined} onDescriptionSaved={setAboutDescription} />}
             {activeSection === 'projects' && <PortfolioSection isAdmin initialShowMetrics={showMetrics} cache={cache} cachedFetch={cachedFetch} updateCache={updateCache} />}
             {activeSection === 'case studies' && <CaseStudiesSection isAdmin initialShowCaseStudies={showCaseStudies} initialShowKeyOutcomes={showKeyOutcomes} />}
             {activeSection === 'blog' && <BlogSection isAdmin initialShowBlog={showBlog} cache={cache} cachedFetch={cachedFetch} updateCache={updateCache} />}
             {activeSection === 'github' && <AdminGitHubRepos cache={cache} cachedFetch={cachedFetch} updateCache={updateCache} />}
             {activeSection === 'resume' && <AdminResumeEditor onCvUrlChange={setCvUrl} cache={cache} cachedFetch={cachedFetch} updateCache={updateCache} />}
             {activeSection === 'settings' && <AdminSettings cache={cache} cachedFetch={cachedFetch} updateCache={updateCache} />}
+            {activeSection === 'contacts' && <AdminContacts onUnreadChange={setContactsUnread} />}
           </div>
         </main>
       </div>
