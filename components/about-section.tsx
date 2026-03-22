@@ -2,6 +2,7 @@
 
 import * as LucideIcons from 'lucide-react'
 import { ChevronLeft, ChevronRight, MessageSquarePlus, Send, Pencil, Plus, Trash2, Loader2, X, Check, Search, Link2, Link2Off } from 'lucide-react'
+import Image from 'next/image'
 import { aboutData } from '@/lib/portfolio-data'
 import { useRef, useState, useEffect, useCallback } from 'react'
 import { useEditor, EditorContent } from '@tiptap/react'
@@ -642,7 +643,14 @@ export function AboutSection({ data = aboutData, isAdmin = false, initialDescrip
                       <div key={i} className="flex-shrink-0 p-4 bg-secondary rounded-xl md:rounded-2xl border border-border" style={{ width: cardWidth || undefined }}>
                         <div className="flex items-center gap-3 mb-3">
                           {testimonial.avatar ? (
-                            <img src={testimonial.avatar} alt={testimonial.name} className="w-11 h-11 rounded-xl object-cover flex-shrink-0" />
+                            <Image
+                              src={testimonial.avatar}
+                              alt={testimonial.name}
+                              width={44}
+                              height={44}
+                              className="rounded-xl object-cover flex-shrink-0"
+                              loading="lazy"
+                            />
                           ) : (
                             <div className="w-11 h-11 rounded-xl bg-accent/20 flex items-center justify-center flex-shrink-0">
                               <span className="text-accent font-medium text-base">{initials}</span>
@@ -848,11 +856,14 @@ export function AboutSection({ data = aboutData, isAdmin = false, initialDescrip
                 <div className={`relative py-4 ${shouldMarquee ? 'overflow-hidden' : ''}`}>
                   <div className={`flex gap-6 md:gap-8 ${shouldMarquee ? 'animate-marquee-slow' : 'flex-wrap justify-center'}`}>
                     {displayed.map((client, i) => (
-                      <img
+                      <Image
                         key={i}
                         src={client.logo || '/placeholder.svg'}
-                        alt={client.name}
-                        className="flex-shrink-0 h-10 md:h-12 w-auto object-contain opacity-60 hover:opacity-100 transition-opacity"
+                        alt={client.name || 'Client logo'}
+                        width={80}
+                        height={48}
+                        className="flex-shrink-0 object-contain opacity-60 hover:opacity-100 transition-opacity"
+                        loading="lazy"
                       />
                     ))}
                   </div>

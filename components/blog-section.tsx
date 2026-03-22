@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
+import Image from 'next/image'
 import { EyeOff, Pencil, Plus, Trash2, Loader2, Check, X, Upload, ArrowLeft, Calendar, Clock, ArrowRight, Share2, CalendarIcon } from 'lucide-react'
 import { toast } from 'sonner'
 import { BlogFeaturedSlider } from '@/components/blog-featured-slider'
@@ -296,7 +297,14 @@ export function BlogSection({ isAdmin = false, linkMode = false, initialShowBlog
           </button>
         </div>
         <div className="relative w-full h-72 md:h-96 rounded-xl overflow-hidden">
-          <img src={selectedPost.image || '/placeholder.svg'} alt={selectedPost.title} className="w-full h-full object-cover" />
+          <Image
+            src={selectedPost.image || '/placeholder.svg'}
+            alt={selectedPost.title}
+            fill
+            className="object-cover"
+            priority
+            sizes="(max-width: 768px) 100vw, 800px"
+          />
           {selectedPost.category && (
             <div className="absolute top-4 right-4 px-3 py-1 bg-accent text-accent-foreground text-xs font-semibold rounded-full">
               {selectedPost.category}
@@ -479,10 +487,13 @@ export function BlogSection({ isAdmin = false, linkMode = false, initialShowBlog
               className="group bg-secondary rounded-xl md:rounded-2xl border border-border overflow-hidden hover:border-accent hover:shadow-lg hover:shadow-accent/10 transition-all duration-300 flex flex-col"
             >
               <div className="h-48 overflow-hidden bg-background relative">
-                <img
+                <Image
                   src={post.image || '/placeholder.svg'}
                   alt={post.title}
-                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                  fill
+                  className="object-cover group-hover:scale-105 transition-transform duration-500"
+                  sizes="(max-width: 768px) 100vw, 50vw"
+                  loading="lazy"
                 />
                 {isAdmin && (() => {
                   const now = new Date()

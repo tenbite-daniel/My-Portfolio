@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
+import Image from 'next/image'
 import { EyeOff, ExternalLink, Eye, Pencil, Plus, Trash2, Loader2, Check, X, Upload, ChevronDown } from 'lucide-react'
 import { ProjectMetrics } from './project-metrics'
 import { toast } from 'sonner'
@@ -361,11 +362,14 @@ export function PortfolioSection({ isAdmin = false, linkMode = false, initialSho
           {filteredProjects.map((project, index) => (
             <div key={(project as Project)._id ?? index} className="space-y-4">
               <div className="group relative bg-secondary rounded-xl md:rounded-2xl border border-border overflow-hidden hover:border-accent transition-all duration-300 hover:shadow-xl hover:shadow-accent/10">
-                <div className="aspect-[4/3] overflow-hidden bg-background">
-                  <img
+                <div className="aspect-[4/3] overflow-hidden bg-background relative">
+                  <Image
                     src={project.image || '/placeholder.svg'}
                     alt={project.title}
-                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                    fill
+                    className="object-cover group-hover:scale-110 transition-transform duration-500"
+                    sizes="(max-width: 768px) 100vw, 50vw"
+                    loading="lazy"
                   />
                 </div>
 
@@ -749,8 +753,14 @@ export function PortfolioSection({ isAdmin = false, linkMode = false, initialSho
             <div className="overflow-y-auto scrollbar-themed flex-1">
               <div className="space-y-4 p-6">
                 {previewProject.image && (
-                  <div className="relative w-3/4 mx-auto">
-                    <img src={previewProject.image} alt={previewProject.title} className="w-full aspect-[4/3] object-cover rounded-xl border border-border" />
+                  <div className="relative w-3/4 mx-auto aspect-[4/3] rounded-xl border border-border overflow-hidden">
+                    <Image
+                      src={previewProject.image}
+                      alt={previewProject.title}
+                      fill
+                      className="object-cover"
+                      sizes="(max-width: 640px) 100vw, 512px"
+                    />
                     {previewProject.category && (
                       <span className="absolute top-2 right-2 px-2.5 py-1 bg-black/60 text-white rounded-lg text-xs font-medium capitalize backdrop-blur-sm">
                         {previewProject.category}

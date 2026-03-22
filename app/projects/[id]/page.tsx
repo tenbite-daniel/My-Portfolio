@@ -1,5 +1,6 @@
 import { Suspense } from 'react'
 import Link from 'next/link'
+import Image from 'next/image'
 import { notFound } from 'next/navigation'
 import { ArrowLeft, Eye, ExternalLink } from 'lucide-react'
 import type { Metadata } from 'next'
@@ -30,13 +31,43 @@ async function getShowMetrics() {
   return doc?.showMetrics !== false
 }
 
+const BASE_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://localhost:3000'
+
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
   const { id } = await params
   const project = await getProject(id)
   if (!project) return {}
+  const title = project.title
+  const description = project.description || ''
+  const ogImage = project.image || undefined
   return {
-    title: project.title,
-    description: project.description,
+    title,
+    description,
+    alternates: { canonical: `${BASE_URL}/projects/${id}` },
+    openGraph: {
+      type: 'website',
+      locale: 'en_US',
+      url: `${BASE_URL}/projects/${id}`,
+      title,
+      description,
+      ...(ogImage ? { images: [{ url: ogImage, width: 1200, height: 630, alt: title }] } : {}),
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title,
+      description,
+      ...(ogImage ? { images: [ogImage] } : {}),
+    },
+  }
+}
+
+export async function generateStaticParams() {
+  try {
+    await connectDB()
+    const projects = await Project.find({}, { _id: 1 }).lean()
+    return projects.map((p) => ({ id: String(p._id) }))
+  } catch {
+    return []
   }
 }
 
@@ -58,11 +89,14 @@ async function ProjectContent({ paramsPromise }: { paramsPromise: Promise<{ id: 
       </div>
 
       {project.image && (
-        <div className="relative">
-          <img
+        <div className="relative w-full aspect-[21/9] rounded-xl border border-border overflow-hidden">
+          <Image
             src={project.image}
             alt={project.title}
-            className="w-full aspect-[21/9] object-cover rounded-xl border border-border"
+            fill
+            className="object-cover"
+            priority
+            sizes="(max-width: 768px) 100vw, 1200px"
           />
           {project.category && (
             <span className="absolute top-3 right-3 px-2.5 py-1 bg-accent/80 text-accent-foreground rounded-lg text-xs font-medium capitalize backdrop-blur-sm">

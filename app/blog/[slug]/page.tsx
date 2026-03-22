@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import Image from 'next/image'
 import { notFound } from 'next/navigation'
 import type { Metadata } from 'next'
 import { ArrowLeft, Calendar, Clock } from 'lucide-react'
@@ -6,11 +7,20 @@ import { connectDB } from '@/lib/mongodb'
 import { Blog } from '@/models/Blog'
 import { SiteSettings } from '@/models/SiteSettings'
 import { About } from '@/models/About'
+import { Profile } from '@/models/Profile'
 import { cacheTag } from 'next/cache'
 import { BlogShell } from '@/components/blog-shell'
 import { ShareButton } from '@/components/share-button'
 
 const BASE_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://localhost:3000'
+
+async function getAuthorName() {
+  'use cache'
+  cacheTag('profile')
+  await connectDB()
+  const doc = await Profile.findOne({}, { name: 1 }).lean() as { name?: string } | null
+  return doc?.name || null
+}
 
 async function getShowBlog() {
   'use cache'
@@ -87,7 +97,7 @@ export async function generateStaticParams() {
   }
 }
 
-function BlogPostingJsonLd({ post, url }: { post: Record<string, unknown>; url: string }) {
+function BlogPostingJsonLd({ post, url, authorName }: { post: Record<string, unknown>; url: string; authorName?: string }) {
   const schema = {
     '@context': 'https://schema.org',
     '@type': 'BlogPosting',
@@ -98,19 +108,20 @@ function BlogPostingJsonLd({ post, url }: { post: Record<string, unknown>; url: 
     dateModified: post.updatedAt,
     ...(post.image ? { image: post.image } : {}),
     ...(Array.isArray(post.tags) && post.tags.length ? { keywords: (post.tags as string[]).join(', ') } : {}),
+    ...(authorName ? { author: { '@type': 'Person', name: authorName } } : {}),
   }
   return <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }} />
 }
 
 export default async function BlogPostPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params
-  const [showBlog, post] = await Promise.all([getShowBlog(), getPost(slug)])
+  const [showBlog, post, authorName] = await Promise.all([getShowBlog(), getPost(slug), getAuthorName()])
   if (!showBlog || !post) notFound()
   const url = `/blog/${slug}`
 
   return (
     <BlogShell>
-      <BlogPostingJsonLd post={post} url={url} />
+      <BlogPostingJsonLd post={post} url={url} authorName={authorName ?? undefined} />
       <article className="space-y-8">
         <div className="flex items-center justify-between">
           <Link
@@ -124,10 +135,13 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
         </div>
 
         <div className="relative w-full h-72 md:h-96 rounded-xl overflow-hidden">
-          <img
+          <Image
             src={post.image || '/placeholder.svg'}
             alt={post.title}
-            className="w-full h-full object-cover"
+            fill
+            className="object-cover"
+            priority
+            sizes="(max-width: 768px) 100vw, 800px"
           />
           {post.category && (
             <div className="absolute top-4 right-4 px-3 py-1 bg-accent text-accent-foreground text-xs font-semibold rounded-full">
