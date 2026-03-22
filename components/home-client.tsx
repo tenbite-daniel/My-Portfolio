@@ -28,7 +28,7 @@ interface HomeClientProps {
   initialCaseStudies?: { _id?: string; title: string; project: string; overview: string; challenge: string; approach: string; solution: string; results: string[] }[]
   initialProjects?: { _id?: string; title: string; category: string; image: string; description: string; tech: string[]; liveUrl: string; githubUrl: string; metrics?: Record<string, string> }[] | null
   testimonials: { name: string; email: string; text: string; avatar?: string }[]
-  resumeData?: { experience: { title: string; period: string; description: string }[]; education: { title: string; period: string; description: string }[]; skills: { name: string; level: number }[]; cvUrl?: string | null }
+  resumeData?: { experience: { title: string; period: string; description: string }[]; education: { title: string; period: string; description: string }[]; skills: { name: string; level: number }[]; cvUrl?: string | null; projects?: { title: string; description: string; tech: string[]; link: string }[] }
   githubSection: ReactNode
 }
 

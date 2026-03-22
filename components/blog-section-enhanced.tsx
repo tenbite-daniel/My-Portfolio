@@ -59,7 +59,7 @@ export function BlogSection() {
 
           <div className="bg-secondary rounded-lg p-6 border border-border">
             <p className="text-muted-foreground leading-relaxed">
-              {post.content || 'Full article content would be displayed here. This is a comprehensive breakdown of the topic with detailed explanations, code examples, and best practices.'}
+              {(post as Record<string, unknown>).content as string || 'Full article content would be displayed here. This is a comprehensive breakdown of the topic with detailed explanations, code examples, and best practices.'}
             </p>
           </div>
 

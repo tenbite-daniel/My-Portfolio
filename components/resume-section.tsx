@@ -10,7 +10,7 @@ type TimelineItem = { title: string; period: string; description: string }
 type Skill = { name: string; level: number }
 
 interface ResumeSectionProps {
-  data?: typeof resumeData
+  data?: Omit<typeof resumeData, 'projects'> & { projects?: typeof resumeData.projects; cvUrl?: string | null }
   isAdmin?: boolean
 }
 

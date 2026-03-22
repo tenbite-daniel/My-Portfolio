@@ -19,7 +19,7 @@ const ALL_ICON_NAMES = Object.keys(LucideIcons).filter(
 )
 
 function LucideIcon({ name, className, strokeWidth }: { name: string; className?: string; strokeWidth?: number }) {
-  const Icon = (LucideIcons as Record<string, LucideIcons.LucideIcon>)[name]
+  const Icon = (LucideIcons as unknown as Record<string, LucideIcons.LucideIcon>)[name]
   if (!Icon) return null
   return <Icon className={className} strokeWidth={strokeWidth} />
 }
@@ -104,7 +104,7 @@ interface AboutSectionProps {
 }
 
 export function AboutSection({ data = aboutData, isAdmin = false, initialDescription, initialServices, initialClients, initialShowClients, initialTestimonials, onDescriptionSaved }: AboutSectionProps) {
-  const [dbTestimonials, setDbTestimonials] = useState<typeof data.testimonials | null>(initialTestimonials ?? null)
+  const [dbTestimonials, setDbTestimonials] = useState<{ name: string; email: string; text: string; avatar?: string }[] | null>(initialTestimonials ?? null)
   const [dbDescription, setDbDescription] = useState<string[] | null>(initialDescription ?? null)
   const [dbServices, setDbServices] = useState<Service[] | null>(initialServices ?? null)
   const [editing, setEditing] = useState(false)

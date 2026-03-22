@@ -72,7 +72,7 @@ export function AdminSettings({ cachedFetch, updateCache }: CacheProps) {
       ? cachedFetch('settings', '/api/admin/settings')
       : fetch('/api/admin/settings').then(r => r.json())
     load
-      .then(({ profile: p, site: s }: { profile: Record<string, string & { social: Record<string, string> }>; site: Record<string, string> }) => {
+      .then(({ profile: p, site: s }: { profile: { name?: string; title?: string; email?: string; phone?: string; location?: string; avatar?: string; social?: Record<string, string> } | null; site: Record<string, string> | null }) => {
         if (p) {
           setProfile({ name: p.name ?? '', title: p.title ?? '', email: p.email ?? '', phone: p.phone ?? '', location: p.location ?? '', avatar: p.avatar ?? '', social: { github: p.social?.github ?? '', linkedin: p.social?.linkedin ?? '', instagram: p.social?.instagram ?? '', tiktok: p.social?.tiktok ?? '' } })
           if (p.avatar) setAvatarPreview(p.avatar)
