@@ -32,7 +32,7 @@ async function getShowBlog() {
   return doc?.showBlog !== false
 }
 
-export async function BlogShell({ children }: { children: ReactNode }) {
+export async function BlogShell({ children, activePage = 'blog' }: { children: ReactNode, activePage?: string }) {
   const [profileDoc, cvUrl, showBlog] = await Promise.all([getProfile(), getCvUrl(), getShowBlog()])
 
   const profile = profileDoc
@@ -74,7 +74,21 @@ export async function BlogShell({ children }: { children: ReactNode }) {
             <div className="absolute -top-7 left-0 right-0 h-7 bg-background" />
             <div className="relative bg-card">
               <nav className="bg-card flex items-center gap-1 sm:gap-2 md:gap-3 p-3 sm:p-4 md:p-6 overflow-x-auto scrollbar-hide">
-                {(['about', 'projects', 'github', 'resume', 'case studies', 'contact'] as const).map((section) => (
+                <a
+                  href="/?tab=about"
+                  className="px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-medium capitalize transition-colors whitespace-nowrap flex-shrink-0 text-muted-foreground hover:text-foreground hover:bg-secondary"
+                >
+                  about
+                </a>
+                <a
+                  href="/projects"
+                  className={`px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-medium capitalize transition-colors whitespace-nowrap flex-shrink-0 ${
+                    activePage === 'projects' ? 'text-foreground bg-accent/10' : 'text-muted-foreground hover:text-foreground hover:bg-secondary'
+                  }`}
+                >
+                  projects
+                </a>
+                {(['github', 'resume', 'case studies', 'contact'] as const).map((section) => (
                   <a
                     key={section}
                     href={`/?tab=${section}`}
@@ -84,9 +98,14 @@ export async function BlogShell({ children }: { children: ReactNode }) {
                   </a>
                 ))}
                 {showBlog && (
-                  <span className="px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-medium capitalize whitespace-nowrap flex-shrink-0 text-foreground bg-accent/10">
+                  <a
+                    href="/blog"
+                    className={`px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-medium capitalize transition-colors whitespace-nowrap flex-shrink-0 ${
+                      activePage === 'blog' ? 'text-foreground bg-accent/10' : 'text-muted-foreground hover:text-foreground hover:bg-secondary'
+                    }`}
+                  >
                     blog
-                  </span>
+                  </a>
                 )}
                 <a
                   href={cvUrl ? '/api/resume-cv?preview=1' : undefined}

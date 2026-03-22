@@ -5,7 +5,6 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import { ProfileSidebar } from '@/components/profile-sidebar'
 import { AboutSection } from '@/components/about-section'
 import { ResumeSection } from '@/components/resume-section'
-import { PortfolioSection } from '@/components/portfolio-section'
 import { ContactSection } from '@/components/contact-section-new'
 import { ThemeToggle } from '@/components/theme-toggle'
 import { CaseStudiesSection } from '@/components/case-studies-section'
@@ -31,12 +30,12 @@ interface HomeClientProps {
   githubSection: ReactNode
 }
 
-export function HomeClient({ profile, aboutDescription, aboutServices, aboutClients, aboutShowClients, showMetrics = true, showBlog = true, showCaseStudies = true, showKeyOutcomes = true, initialCaseStudies = [], initialProjects, testimonials, resumeData: resumeDoc, githubSection }: HomeClientProps) {
+export function HomeClient({ profile, aboutDescription, aboutServices, aboutClients, aboutShowClients, showMetrics: _showMetrics, showBlog = true, showCaseStudies = true, showKeyOutcomes = true, initialCaseStudies = [], initialProjects: _initialProjects, testimonials, resumeData: resumeDoc, githubSection }: HomeClientProps) {
   const router = useRouter()
   const searchParams = useSearchParams()
   const [activeSection, setActiveSection] = useState(() => searchParams.get('tab') ?? 'about')
   const cvUrl = resumeDoc?.cvUrl ?? null
-  const publicTabs = ['about', 'projects', 'github', 'resume', ...(showCaseStudies ? ['case studies'] : []), 'contact']
+  const publicTabs = ['github', 'resume', ...(showCaseStudies ? ['case studies'] : []), 'contact']
   const navRef = useRef<HTMLElement>(null)
   const mainRef = useRef<HTMLDivElement>(null)
 
@@ -91,6 +90,21 @@ export function HomeClient({ profile, aboutDescription, aboutServices, aboutClie
             <div className="absolute -top-7 left-0 right-0 h-7 bg-background" />
             <div className="relative bg-card">
               <nav ref={navRef} className="bg-card flex items-center gap-1 sm:gap-2 md:gap-3 p-3 sm:p-4 md:p-6 overflow-x-auto scrollbar-hide">
+                <button
+                  data-section="about"
+                  onClick={() => handleTabClick('about')}
+                  className={`px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-medium capitalize transition-colors whitespace-nowrap flex-shrink-0 ${
+                    activeSection === 'about' ? 'text-foreground bg-accent/10' : 'text-muted-foreground hover:text-foreground hover:bg-secondary'
+                  }`}
+                >
+                  about
+                </button>
+                <a
+                  href="/projects"
+                  className="px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-medium capitalize transition-colors whitespace-nowrap flex-shrink-0 text-muted-foreground hover:text-foreground hover:bg-secondary"
+                >
+                  projects
+                </a>
                 {publicTabs.map((section) => (
                   <button
                     key={section}
@@ -128,7 +142,6 @@ export function HomeClient({ profile, aboutDescription, aboutServices, aboutClie
 
           <div className="p-4 sm:p-5 md:p-6 lg:p-8 space-y-8">
             {activeSection === 'about' && <AboutSection data={aboutData} initialDescription={aboutDescription} initialServices={aboutServices} initialClients={aboutClients} initialShowClients={aboutShowClients} initialTestimonials={testimonials} />}
-            {activeSection === 'projects' && <PortfolioSection initialShowMetrics={showMetrics} initialProjects={initialProjects} />}
             {activeSection === 'case studies' && showCaseStudies && <CaseStudiesSection initialStudies={initialCaseStudies} initialShowKeyOutcomes={showKeyOutcomes} />}
             {activeSection === 'github' && githubSection}
             {activeSection === 'resume' && (

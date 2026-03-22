@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
+import Link from 'next/link'
 import { EyeOff, ExternalLink, Eye, Pencil, Plus, Trash2, Loader2, Check, X, Upload, ChevronDown } from 'lucide-react'
 import { ProjectMetrics } from './project-metrics'
 import { toast } from 'sonner'
@@ -40,6 +41,7 @@ const EMPTY_PROJECT: Project = {
 
 interface PortfolioSectionProps {
   isAdmin?: boolean
+  linkMode?: boolean
   initialShowMetrics?: boolean
   initialProjects?: Project[] | null
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -50,7 +52,7 @@ interface PortfolioSectionProps {
   updateCache?: (key: string, partial: Record<string, any>) => void
 }
 
-export function PortfolioSection({ isAdmin = false, initialShowMetrics = true, initialProjects, cachedFetch, updateCache }: PortfolioSectionProps) {
+export function PortfolioSection({ isAdmin = false, linkMode = false, initialShowMetrics = true, initialProjects, cachedFetch, updateCache }: PortfolioSectionProps) {
   const [activeFilter, setActiveFilter] = useState('all')
   const [showMetrics, setShowMetrics] = useState(initialShowMetrics)
   const [togglingMetrics, setTogglingMetrics] = useState(false)
@@ -396,6 +398,27 @@ export function PortfolioSection({ isAdmin = false, initialShowMetrics = true, i
                           {deleting === (project as Project)._id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Trash2 className="w-3.5 h-3.5" />}
                         </button>
                       </>
+                    ) : linkMode ? (
+                      <>
+                        <Link
+                          href={`/projects/${(project as Project)._id}`}
+                          className="flex items-center gap-1.5 md:gap-2 px-3 md:px-4 py-1.5 md:py-2 bg-accent text-accent-foreground rounded-lg text-xs md:text-sm font-medium hover:opacity-90 transition-opacity"
+                        >
+                          <Eye className="w-3.5 h-3.5 md:w-4 md:h-4" />
+                          Details
+                        </Link>
+                        {project.githubUrl && (
+                          <a
+                            href={project.githubUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex items-center gap-1.5 md:gap-2 px-3 md:px-4 py-1.5 md:py-2 bg-secondary border border-border text-foreground rounded-lg text-xs md:text-sm font-medium hover:bg-accent hover:text-accent-foreground hover:border-accent transition-colors"
+                          >
+                            <ExternalLink className="w-3.5 h-3.5 md:w-4 md:h-4" />
+                            Visit
+                          </a>
+                        )}
+                      </>
                     ) : (
                       <>
                         <button
@@ -726,10 +749,16 @@ export function PortfolioSection({ isAdmin = false, initialShowMetrics = true, i
             <div className="overflow-y-auto scrollbar-themed flex-1">
               <div className="space-y-4 p-6">
                 {previewProject.image && (
-                  <img src={previewProject.image} alt={previewProject.title} className="w-full aspect-[4/3] object-cover rounded-xl border border-border" />
+                  <div className="relative w-3/4 mx-auto">
+                    <img src={previewProject.image} alt={previewProject.title} className="w-full aspect-[4/3] object-cover rounded-xl border border-border" />
+                    {previewProject.category && (
+                      <span className="absolute top-2 right-2 px-2.5 py-1 bg-black/60 text-white rounded-lg text-xs font-medium capitalize backdrop-blur-sm">
+                        {previewProject.category}
+                      </span>
+                    )}
+                  </div>
                 )}
                 <div className="flex flex-wrap gap-2">
-                  <span className="px-2.5 py-1 bg-accent/10 text-accent rounded-lg text-xs font-medium capitalize">{previewProject.category}</span>
                   {previewProject.tech?.map((t) => (
                     <span key={t} className="px-2.5 py-1 bg-secondary border border-border rounded-lg text-xs text-muted-foreground">{t}</span>
                   ))}
