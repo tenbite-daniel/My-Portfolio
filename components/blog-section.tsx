@@ -1,14 +1,13 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
+import Link from 'next/link'
 import { EyeOff, Pencil, Plus, Trash2, Loader2, Check, X, Upload, ArrowLeft, Calendar, Clock, ArrowRight, Share2, CalendarIcon } from 'lucide-react'
 import { toast } from 'sonner'
 import { BlogFeaturedSlider } from '@/components/blog-featured-slider'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { Calendar as CalendarPicker } from '@/components/ui/calendar'
-import { blogData } from '@/lib/portfolio-data'
-
 type Post = {
   _id?: string
   title: string
@@ -39,8 +38,9 @@ const EMPTY_POST: Post = {
 }
 
 interface BlogSectionProps {
-  data?: typeof blogData
+  data?: unknown
   isAdmin?: boolean
+  linkMode?: boolean
   initialShowBlog?: boolean
   activePostSlug?: string | null
   onPostSelect?: (slug: string | null) => void
@@ -52,7 +52,7 @@ interface BlogSectionProps {
   updateCache?: (key: string, partial: Record<string, any>) => void
 }
 
-export function BlogSection({ isAdmin = false, initialShowBlog = true, activePostSlug, onPostSelect, cachedFetch, updateCache }: BlogSectionProps) {
+export function BlogSection({ isAdmin = false, linkMode = false, initialShowBlog = true, activePostSlug, onPostSelect, cachedFetch, updateCache }: BlogSectionProps) {
   const [posts, setPosts] = useState<Post[]>([])
   const [loading, setLoading] = useState(false)
   const [showBlog, setShowBlog] = useState(initialShowBlog)
@@ -125,7 +125,7 @@ export function BlogSection({ isAdmin = false, initialShowBlog = true, activePos
   }
 
   const sharePost = (post: Post) => {
-    const url = `${window.location.origin}?tab=blog&post=${post.slug}`
+    const url = `${window.location.origin}/blog/${post.slug}`
     navigator.clipboard.writeText(url).then(() => toast.success('Link copied to clipboard!'))
   }
 
@@ -274,8 +274,8 @@ export function BlogSection({ isAdmin = false, initialShowBlog = true, activePos
     setDeleting(null)
   }
 
-  // Single post view
-  if (selectedPost) {
+  // Single post view — skipped in linkMode (posts are their own pages)
+  if (selectedPost && !linkMode) {
     const idx = posts.findIndex(p => p._id === selectedPost._id || p.slug === selectedPost.slug)
     return (
       <article className="space-y-8">
@@ -392,6 +392,7 @@ export function BlogSection({ isAdmin = false, initialShowBlog = true, activePos
 
       {!loading && posts.length > 0 && (
         <BlogFeaturedSlider onPostSelect={(slug) => {
+          if (linkMode) { window.location.href = `/blog/${slug}`; return }
           const match = posts.find(p => p.slug === slug)
           if (match) selectPost(match)
         }} />
@@ -517,12 +518,21 @@ export function BlogSection({ isAdmin = false, initialShowBlog = true, activePos
                   ))}
                 </div>
                 <div className="flex items-center gap-2 mt-auto">
-                  <button
-                    onClick={() => selectPost(post)}
-                    className="inline-flex items-center gap-2 text-xs md:text-sm text-accent hover:gap-3 transition-all font-medium"
-                  >
-                    Read More <ArrowRight className="w-3.5 h-3.5" />
-                  </button>
+                  {linkMode ? (
+                    <Link
+                      href={`/blog/${post.slug}`}
+                      className="inline-flex items-center gap-2 text-xs md:text-sm text-accent hover:gap-3 transition-all font-medium"
+                    >
+                      Read More <ArrowRight className="w-3.5 h-3.5" />
+                    </Link>
+                  ) : (
+                    <button
+                      onClick={() => selectPost(post)}
+                      className="inline-flex items-center gap-2 text-xs md:text-sm text-accent hover:gap-3 transition-all font-medium"
+                    >
+                      Read More <ArrowRight className="w-3.5 h-3.5" />
+                    </button>
+                  )}
                   {isAdmin && (
                     <div className="ml-auto flex items-center gap-1.5">
                       <button

@@ -6,7 +6,6 @@ import { ProfileSidebar } from '@/components/profile-sidebar'
 import { AboutSection } from '@/components/about-section'
 import { ResumeSection } from '@/components/resume-section'
 import { PortfolioSection } from '@/components/portfolio-section'
-import { BlogSection } from '@/components/blog-section'
 import { ContactSection } from '@/components/contact-section-new'
 import { ThemeToggle } from '@/components/theme-toggle'
 import { CaseStudiesSection } from '@/components/case-studies-section'
@@ -36,23 +35,20 @@ export function HomeClient({ profile, aboutDescription, aboutServices, aboutClie
   const router = useRouter()
   const searchParams = useSearchParams()
   const [activeSection, setActiveSection] = useState(() => searchParams.get('tab') ?? 'about')
-  const [activePostSlug, setActivePostSlug] = useState<string | null>(() => searchParams.get('post'))
   const cvUrl = resumeDoc?.cvUrl ?? null
-  const publicTabs = ['about', 'projects', 'github', 'resume', ...(showBlog ? ['blog'] : []), ...(showCaseStudies ? ['case studies'] : []), 'contact']
+  const publicTabs = ['about', 'projects', 'github', 'resume', ...(showCaseStudies ? ['case studies'] : []), 'contact']
   const navRef = useRef<HTMLElement>(null)
   const mainRef = useRef<HTMLDivElement>(null)
 
-  const updateUrl = (tab: string, post?: string | null) => {
+  const updateUrl = (tab: string) => {
     const params = new URLSearchParams()
     if (tab !== 'about') params.set('tab', tab)
-    if (post) params.set('post', post)
     const qs = params.toString()
     router.replace(qs ? `?${qs}` : '/', { scroll: false })
   }
 
   const handleTabClick = (section: string) => {
     setActiveSection(section)
-    setActivePostSlug(null)
     updateUrl(section)
     const nav = navRef.current
     if (nav) {
@@ -67,16 +63,9 @@ export function HomeClient({ profile, aboutDescription, aboutServices, aboutClie
     }, 50)
   }
 
-  const handlePostSelect = (slug: string | null) => {
-    setActivePostSlug(slug)
-    updateUrl(activeSection, slug)
-  }
-
   useEffect(() => {
     const tab = searchParams.get('tab') ?? 'about'
-    const post = searchParams.get('post')
     setActiveSection(tab)
-    setActivePostSlug(post)
   }, [searchParams])
 
   return (
@@ -116,6 +105,14 @@ export function HomeClient({ profile, aboutDescription, aboutServices, aboutClie
                     {section}
                   </button>
                 ))}
+                {showBlog && (
+                  <a
+                    href="/blog"
+                    className="px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-medium capitalize transition-colors whitespace-nowrap flex-shrink-0 text-muted-foreground hover:text-foreground hover:bg-secondary"
+                  >
+                    blog
+                  </a>
+                )}
                 <a
                   href={cvUrl ? '/api/resume-cv?preview=1' : undefined}
                   target="_blank"
@@ -133,7 +130,6 @@ export function HomeClient({ profile, aboutDescription, aboutServices, aboutClie
             {activeSection === 'about' && <AboutSection data={aboutData} initialDescription={aboutDescription} initialServices={aboutServices} initialClients={aboutClients} initialShowClients={aboutShowClients} initialTestimonials={testimonials} />}
             {activeSection === 'projects' && <PortfolioSection initialShowMetrics={showMetrics} initialProjects={initialProjects} />}
             {activeSection === 'case studies' && showCaseStudies && <CaseStudiesSection initialStudies={initialCaseStudies} initialShowKeyOutcomes={showKeyOutcomes} />}
-            {activeSection === 'blog' && showBlog && <BlogSection activePostSlug={activePostSlug} onPostSelect={handlePostSelect} />}
             {activeSection === 'github' && githubSection}
             {activeSection === 'resume' && (
               <div className="space-y-8">
