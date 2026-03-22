@@ -1,7 +1,22 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { verifyToken } from '@/lib/auth'
+import { MongoClient } from 'mongodb'
 
 export const runtime = 'nodejs'
+
+let client: MongoClient | null = null
+async function getMaintenanceMode(): Promise<boolean> {
+  try {
+    if (!client) client = new MongoClient(process.env.MONGODB_URI!)
+    await client.connect()
+    const doc = await client.db().collection('sitesettings').findOne({}, { projection: { maintenanceMode: 1, maintenanceEndsAt: 1 } })
+    if (!doc?.maintenanceMode) return false
+    if (doc.maintenanceEndsAt && new Date(doc.maintenanceEndsAt) <= new Date()) return false
+    return true
+  } catch {
+    return false
+  }
+}
 
 export async function middleware(req: NextRequest) {
   const host = req.headers.get('host') ?? ''
@@ -29,6 +44,15 @@ export async function middleware(req: NextRequest) {
     const valid = verifyToken(token)
     if (!valid) {
       return NextResponse.redirect(new URL('/admin/login', req.url))
+    }
+    return NextResponse.next()
+  }
+
+  // Maintenance mode
+  if (pathname !== '/maintenance') {
+    const maintenanceMode = await getMaintenanceMode()
+    if (maintenanceMode) {
+      return NextResponse.rewrite(new URL('/maintenance', req.url))
     }
   }
 
