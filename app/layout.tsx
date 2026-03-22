@@ -5,48 +5,115 @@ import Script from 'next/script'
 import { Toaster } from '@/components/ui/sonner'
 import { connectDB } from '@/lib/mongodb'
 import { SiteSettings } from '@/models/SiteSettings'
+import { Profile } from '@/models/Profile'
 import { cacheTag } from 'next/cache'
 import './globals.css'
 
-const poppins = Poppins({ 
-  subsets: ["latin"],
+const BASE_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://localhost:3000'
+
+const DEFAULT_TITLE = 'Full-Stack Developer Portfolio'
+const DEFAULT_DESCRIPTION = 'Portfolio of a Full-Stack Developer specializing in modern web technologies'
+
+const poppins = Poppins({
+  subsets: ['latin'],
   weight: ['300', '400', '500', '600', '700'],
-  variable: '--font-poppins'
-});
+  variable: '--font-poppins',
+})
 
 async function getSiteSettings() {
   'use cache'
   cacheTag('site')
   await connectDB()
   const doc = await SiteSettings.findOne().lean()
-  return JSON.parse(JSON.stringify(doc))
+  return doc ? JSON.parse(JSON.stringify(doc)) : null
+}
+
+async function getProfile() {
+  'use cache'
+  cacheTag('profile')
+  await connectDB()
+  const doc = await Profile.findOne().lean()
+  return doc ? JSON.parse(JSON.stringify(doc)) : null
+}
+
+function JsonLd({ name, jobTitle, description, url, avatar, ogImage, email, github, linkedin }: {
+  name: string
+  jobTitle: string
+  description: string
+  url: string
+  avatar: string | null
+  ogImage: string | null
+  email?: string
+  github?: string
+  linkedin?: string
+}) {
+  const sameAs = [github, linkedin].filter(Boolean)
+  const personImage = avatar || ogImage
+
+  const schema = {
+    '@context': 'https://schema.org',
+    '@graph': [
+      {
+        '@type': 'Person',
+        '@id': `${url}/#person`,
+        name,
+        jobTitle,
+        description,
+        url,
+        ...(personImage && { image: personImage }),
+        ...(email && { email }),
+        ...(sameAs.length && { sameAs }),
+      },
+      {
+        '@type': 'WebSite',
+        '@id': `${url}/#website`,
+        url,
+        name,
+        description,
+        publisher: { '@id': `${url}/#person` },
+      },
+    ],
+  }
+
+  return (
+    <script
+      type="application/ld+json"
+      dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }}
+    />
+  )
 }
 
 export async function generateMetadata(): Promise<Metadata> {
   try {
-    const site = await getSiteSettings()
-    const metadataBase = site?.canonicalUrl ? new URL(site.canonicalUrl) : undefined
-    const title = site?.seoTitle || 'John Doe - Full-Stack Developer'
-    const description = site?.seoDescription || 'Portfolio of John Doe, a Full-Stack Developer specializing in modern web technologies'
-    const ogImage = site?.ogImage || undefined
+    const [site, profile] = await Promise.all([getSiteSettings(), getProfile()])
+    const metadataBase = new URL(site?.canonicalUrl || BASE_URL)
+    const title = site?.seoTitle || DEFAULT_TITLE
+    const description = site?.seoDescription || DEFAULT_DESCRIPTION
+    const ogImage = site?.ogImage || site?.defaultOgImage || '/og-default.webp'
+
     return {
       metadataBase,
       title,
       description,
       keywords: site?.seoKeywords || '',
+      authors: profile?.name ? [{ name: profile.name, url: '/' }] : undefined,
+      alternates: { canonical: '/' },
       openGraph: {
+        type: 'website',
+        url: '/',
+        locale: 'en_US',
         title,
         description,
         siteName: site?.siteName || undefined,
-        ...(ogImage ? { images: [{ url: ogImage, width: 1200, height: 630, alt: title }] } : {}),
+        images: [{ url: ogImage, width: 1200, height: 630, alt: title }],
       },
       twitter: {
-        card: (site?.twitterCard as 'summary' | 'summary_large_image') || 'summary_large_image',
+        card: 'summary_large_image',
         site: site?.twitterSite || undefined,
         creator: site?.twitterCreator || undefined,
         title,
         description,
-        ...(ogImage ? { images: [ogImage] } : {}),
+        images: [ogImage],
       },
       icons: {
         icon: site?.favicon
@@ -61,8 +128,8 @@ export async function generateMetadata(): Promise<Metadata> {
     }
   } catch {
     return {
-      title: 'John Doe - Full-Stack Developer',
-      description: 'Portfolio of John Doe, a Full-Stack Developer specializing in modern web technologies',
+      title: DEFAULT_TITLE,
+      description: DEFAULT_DESCRIPTION,
     }
   }
 }
@@ -72,12 +139,33 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode
 }>) {
-  const site = await getSiteSettings().catch(() => null)
+  const [site, profile] = await Promise.all([
+    getSiteSettings().catch(() => null),
+    getProfile().catch(() => null),
+  ])
   const gaId = site?.googleAnalyticsId
+
+  let jsonLdProps = null
+  try {
+    jsonLdProps = {
+      name: profile?.name || 'Portfolio',
+      jobTitle: profile?.title || 'Full-Stack Developer',
+      description: site?.seoDescription || DEFAULT_DESCRIPTION,
+      url: BASE_URL,
+      ogImage: site?.ogImage || null,
+      avatar: profile?.avatar || null,
+      email: profile?.email,
+      github: profile?.social?.github,
+      linkedin: profile?.social?.linkedin,
+    }
+  } catch {
+    // non-critical — skip if DB is unavailable
+  }
 
   return (
     <html lang="en">
       <body className={`${poppins.variable} font-sans antialiased`}>
+        {jsonLdProps && <JsonLd {...jsonLdProps} />}
         {children}
         <Analytics />
         <Toaster richColors position="bottom-right" />
