@@ -1,11 +1,11 @@
 'use client'
 
 import { Calendar, Clock, ArrowRight, ArrowLeft } from 'lucide-react'
-import { blogData } from '@/lib/portfolio-data'
 import { useState } from 'react'
 
 export function BlogSection() {
-  const { posts } = blogData
+  type Post = { title: string; category: string; date: string; readTime: string; image: string; excerpt: string; tags: string[]; slug: string }
+  const posts: Post[] = []
   const [selectedPost, setSelectedPost] = useState<number | null>(null)
   
   if (selectedPost !== null && posts[selectedPost]) {

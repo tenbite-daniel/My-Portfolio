@@ -17,7 +17,6 @@ import { LogOut } from 'lucide-react'
 import {
   profileData,
   aboutData,
-  blogData,
 } from '@/lib/portfolio-data'
 
 type ProfileData = typeof profileData
