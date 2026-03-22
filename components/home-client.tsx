@@ -24,13 +24,15 @@ interface HomeClientProps {
   showMetrics?: boolean
   showBlog?: boolean
   showCaseStudies?: boolean
+  showKeyOutcomes?: boolean
+  initialCaseStudies?: { _id?: string; title: string; project: string; overview: string; challenge: string; approach: string; solution: string; results: string[] }[]
   initialProjects?: { _id?: string; title: string; category: string; image: string; description: string; tech: string[]; liveUrl: string; githubUrl: string; metrics?: Record<string, string> }[] | null
   testimonials: { name: string; email: string; text: string; avatar?: string }[]
   resumeData?: { experience: { title: string; period: string; description: string }[]; education: { title: string; period: string; description: string }[]; skills: { name: string; level: number }[]; cvUrl?: string | null }
   githubSection: ReactNode
 }
 
-export function HomeClient({ profile, aboutDescription, aboutServices, aboutClients, aboutShowClients, showMetrics = true, showBlog = true, showCaseStudies = true, initialProjects, testimonials, resumeData: resumeDoc, githubSection }: HomeClientProps) {
+export function HomeClient({ profile, aboutDescription, aboutServices, aboutClients, aboutShowClients, showMetrics = true, showBlog = true, showCaseStudies = true, showKeyOutcomes = true, initialCaseStudies = [], initialProjects, testimonials, resumeData: resumeDoc, githubSection }: HomeClientProps) {
   const router = useRouter()
   const searchParams = useSearchParams()
   const [activeSection, setActiveSection] = useState(() => searchParams.get('tab') ?? 'about')
@@ -130,7 +132,7 @@ export function HomeClient({ profile, aboutDescription, aboutServices, aboutClie
           <div className="p-4 sm:p-5 md:p-6 lg:p-8 space-y-8">
             {activeSection === 'about' && <AboutSection data={aboutData} initialDescription={aboutDescription} initialServices={aboutServices} initialClients={aboutClients} initialShowClients={aboutShowClients} initialTestimonials={testimonials} />}
             {activeSection === 'projects' && <PortfolioSection initialShowMetrics={showMetrics} initialProjects={initialProjects} />}
-            {activeSection === 'case studies' && showCaseStudies && <CaseStudiesSection />}
+            {activeSection === 'case studies' && showCaseStudies && <CaseStudiesSection initialStudies={initialCaseStudies} initialShowKeyOutcomes={showKeyOutcomes} />}
             {activeSection === 'blog' && showBlog && <BlogSection activePostSlug={activePostSlug} onPostSelect={handlePostSelect} />}
             {activeSection === 'github' && githubSection}
             {activeSection === 'resume' && (

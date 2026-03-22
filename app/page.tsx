@@ -4,6 +4,7 @@ import { About } from '@/models/About'
 import { Testimony } from '@/models/Testimony'
 import { Project } from '@/models/Project'
 import { Resume } from '@/models/Resume'
+import { CaseStudy } from '@/models/CaseStudy'
 import { profileData, aboutData, resumeData } from '@/lib/portfolio-data'
 import { HomeClient } from '@/components/home-client'
 import { GitHubSection } from '@/components/github-section'
@@ -56,13 +57,22 @@ async function getProjects() {
   return JSON.parse(JSON.stringify(docs))
 }
 
+async function getCaseStudies() {
+  'use cache'
+  cacheTag('case-studies')
+  await connectDB()
+  const docs = await CaseStudy.find().sort({ order: 1 }).lean()
+  return JSON.parse(JSON.stringify(docs))
+}
+
 export default async function Home() {
-  const [profileDoc, aboutDoc, testimonials, projectDocs, resumeDoc] = await Promise.all([
+  const [profileDoc, aboutDoc, testimonials, projectDocs, resumeDoc, caseStudyDocs] = await Promise.all([
     getProfile(),
     getAbout(),
     getTestimonials(),
     getProjects(),
     getResume(),
+    getCaseStudies(),
   ])
 
   const profile = profileDoc
@@ -97,12 +107,14 @@ export default async function Home() {
   const showMetrics: boolean = typeof aboutDoc?.showMetrics === 'boolean' ? aboutDoc.showMetrics : true
   const showBlog: boolean = typeof aboutDoc?.showBlog === 'boolean' ? aboutDoc.showBlog : true
   const showCaseStudies: boolean = typeof aboutDoc?.showCaseStudies === 'boolean' ? aboutDoc.showCaseStudies : true
+  const showKeyOutcomes: boolean = typeof aboutDoc?.showKeyOutcomes === 'boolean' ? aboutDoc.showKeyOutcomes : true
 
   const projects = projectDocs?.length ? projectDocs : null
+  const caseStudies = caseStudyDocs?.length ? caseStudyDocs : []
 
   return (
     <Suspense>
-      <HomeClient profile={profile} aboutDescription={description} aboutServices={services} aboutClients={clients} aboutShowClients={showClients} showMetrics={showMetrics} showBlog={showBlog} showCaseStudies={showCaseStudies} initialProjects={projects} testimonials={testimonials} resumeData={resumeDoc} githubSection={
+      <HomeClient profile={profile} aboutDescription={description} aboutServices={services} aboutClients={clients} aboutShowClients={showClients} showMetrics={showMetrics} showBlog={showBlog} showCaseStudies={showCaseStudies} showKeyOutcomes={showKeyOutcomes} initialProjects={projects} initialCaseStudies={caseStudies} testimonials={testimonials} resumeData={resumeDoc} githubSection={
         <Suspense key="github" fallback={<div className="flex items-center justify-center py-12"><p className="text-muted-foreground">Loading GitHub data...</p></div>}>
           <GitHubSection />
         </Suspense>
