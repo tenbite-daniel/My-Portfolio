@@ -1,9 +1,12 @@
 'use client'
 
 import * as LucideIcons from 'lucide-react'
-import { ChevronLeft, ChevronRight, MessageSquarePlus, Send, Pencil, Plus, Trash2, Loader2, X, Check, Search } from 'lucide-react'
+import { ChevronLeft, ChevronRight, MessageSquarePlus, Send, Pencil, Plus, Trash2, Loader2, X, Check, Search, Link2, Link2Off } from 'lucide-react'
 import { aboutData } from '@/lib/portfolio-data'
 import { useRef, useState, useEffect, useCallback } from 'react'
+import { useEditor, EditorContent } from '@tiptap/react'
+import StarterKit from '@tiptap/starter-kit'
+import Link from '@tiptap/extension-link'
 import {
   Dialog,
   DialogContent,
@@ -92,6 +95,91 @@ function IconPicker({ value, onChange }: { value: string; onChange: (name: strin
 type Service = { icon: string; title: string; description: string }
 type Client = { name: string; logo: string }
 
+function ParagraphEditor({ value, index, total, onChange, onRemove }: {
+  value: string
+  index: number
+  total: number
+  onChange: (html: string) => void
+  onRemove: () => void
+}) {
+  const [linkUrl, setLinkUrl] = useState('')
+  const [showLinkInput, setShowLinkInput] = useState(false)
+
+  const editor = useEditor({
+    immediatelyRender: false,
+    extensions: [
+      StarterKit,
+      Link.configure({ openOnClick: false, HTMLAttributes: { target: '_blank', rel: 'noopener noreferrer' } }),
+    ],
+    content: value,
+    onUpdate: ({ editor }) => onChange(editor.getHTML()),
+    editorProps: { attributes: { class: 'min-h-[72px] px-3 py-2.5 text-sm text-foreground focus:outline-none' } },
+  })
+
+  const applyLink = () => {
+    if (!editor) return
+    const url = linkUrl.trim()
+    if (!url) { editor.chain().focus().unsetLink().run(); setShowLinkInput(false); return }
+    const href = url.startsWith('http') ? url : `https://${url}`
+    editor.chain().focus().setLink({ href }).run()
+    setLinkUrl('')
+    setShowLinkInput(false)
+  }
+
+  if (!editor) return null
+
+  return (
+    <div className="flex gap-2 items-start">
+      <div className="flex-1 bg-secondary border border-border rounded-xl overflow-hidden focus-within:border-accent focus-within:ring-2 focus-within:ring-accent/20 transition-all">
+        <div className="flex items-center gap-0.5 px-2 py-1.5 border-b border-border bg-card">
+          <button type="button" title="Bold" onMouseDown={(e) => { e.preventDefault(); editor.chain().focus().toggleBold().run() }}
+            className={`p-1.5 rounded text-xs transition-colors ${editor.isActive('bold') ? 'bg-accent text-accent-foreground' : 'text-muted-foreground hover:text-foreground hover:bg-secondary'}`}>
+            <strong>B</strong>
+          </button>
+          <button type="button" title="Italic" onMouseDown={(e) => { e.preventDefault(); editor.chain().focus().toggleItalic().run() }}
+            className={`p-1.5 rounded text-xs transition-colors ${editor.isActive('italic') ? 'bg-accent text-accent-foreground' : 'text-muted-foreground hover:text-foreground hover:bg-secondary'}`}>
+            <em>I</em>
+          </button>
+          <div className="w-px h-4 bg-border mx-1" />
+          <button type="button" title={editor.isActive('link') ? 'Remove link' : 'Add link'}
+            onMouseDown={(e) => {
+              e.preventDefault()
+              if (editor.isActive('link')) { editor.chain().focus().unsetLink().run(); return }
+              setShowLinkInput((v) => !v)
+            }}
+            className={`p-1.5 rounded transition-colors ${editor.isActive('link') ? 'bg-accent text-accent-foreground' : 'text-muted-foreground hover:text-foreground hover:bg-secondary'}`}>
+            {editor.isActive('link') ? <Link2Off className="w-3.5 h-3.5" /> : <Link2 className="w-3.5 h-3.5" />}
+          </button>
+          {showLinkInput && (
+            <div className="flex items-center gap-1 ml-1">
+              <input
+                autoFocus
+                value={linkUrl}
+                onChange={(e) => setLinkUrl(e.target.value)}
+                onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); applyLink() } if (e.key === 'Escape') setShowLinkInput(false) }}
+                placeholder="https://..."
+                className="px-2 py-1 text-xs bg-card border border-border rounded-lg text-foreground placeholder:text-muted-foreground focus:border-accent focus:outline-none w-44"
+              />
+              <button type="button" onMouseDown={(e) => { e.preventDefault(); applyLink() }}
+                className="p-1 rounded bg-accent text-accent-foreground hover:opacity-90 transition-opacity">
+                <Check className="w-3 h-3" />
+              </button>
+            </div>
+          )}
+        </div>
+        <EditorContent editor={editor} />
+      </div>
+      <button
+        onClick={onRemove}
+        disabled={total === 1}
+        className="mt-2 w-8 h-8 flex-shrink-0 rounded-lg bg-destructive/10 text-destructive hover:bg-destructive hover:text-white flex items-center justify-center transition-colors disabled:opacity-30"
+      >
+        <Trash2 className="w-4 h-4" />
+      </button>
+    </div>
+  )
+}
+
 interface AboutSectionProps {
   data?: typeof aboutData
   isAdmin?: boolean
@@ -169,7 +257,9 @@ export function AboutSection({ data = aboutData, isAdmin = false, initialDescrip
   }, [calcCardWidth])
 
   const startEditing = () => {
-    setParagraphs(dbDescription ?? data.description)
+    // Convert plain text to HTML if not already HTML
+    const desc = dbDescription ?? data.description
+    setParagraphs(desc.map((p) => p.startsWith('<') ? p : `<p>${p}</p>`))
     setEditing(true)
   }
 
@@ -369,22 +459,14 @@ export function AboutSection({ data = aboutData, isAdmin = false, initialDescrip
           <div className="space-y-4">
             <div className="space-y-3">
               {paragraphs.map((p, i) => (
-                <div key={i} className="flex gap-2 items-start">
-                  <textarea
-                    className="flex-1 px-3 py-2.5 bg-secondary border border-border rounded-xl text-sm text-foreground placeholder:text-muted-foreground focus:border-accent focus:ring-2 focus:ring-accent/20 focus:outline-none transition-all resize-none"
-                    rows={3}
-                    value={p}
-                    onChange={(e) => { const u = [...paragraphs]; u[i] = e.target.value; setParagraphs(u) }}
-                    placeholder={`Paragraph ${i + 1}...`}
-                  />
-                  <button
-                    onClick={() => setParagraphs(paragraphs.filter((_, j) => j !== i))}
-                    disabled={paragraphs.length === 1}
-                    className="mt-2 w-8 h-8 flex-shrink-0 rounded-lg bg-destructive/10 text-destructive hover:bg-destructive hover:text-white flex items-center justify-center transition-colors disabled:opacity-30"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </button>
-                </div>
+                <ParagraphEditor
+                  key={i}
+                  value={p}
+                  index={i}
+                  total={paragraphs.length}
+                  onChange={(html) => { const u = [...paragraphs]; u[i] = html; setParagraphs(u) }}
+                  onRemove={() => setParagraphs(paragraphs.filter((_, j) => j !== i))}
+                />
               ))}
             </div>
             <button
@@ -406,9 +488,9 @@ export function AboutSection({ data = aboutData, isAdmin = false, initialDescrip
             </div>
           </div>
         ) : (
-          <div className="space-y-4 text-sm md:text-base text-muted-foreground leading-relaxed">
+          <div className="space-y-4 text-sm md:text-base text-muted-foreground leading-relaxed [&_a]:text-accent [&_a]:underline [&_a]:underline-offset-2 [&_a]:hover:opacity-80 [&_a]:transition-opacity">
             {(dbDescription ?? data.description).map((paragraph, index) => (
-              <p key={index}>{paragraph}</p>
+              <div key={index} dangerouslySetInnerHTML={{ __html: paragraph.startsWith('<') ? paragraph : `<p>${paragraph}</p>` }} />
             ))}
           </div>
         )}
