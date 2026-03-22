@@ -11,4 +11,5 @@ const CaseStudySchema = new Schema({
   order: { type: Number, default: 0 },
 }, { timestamps: true })
 
-export const CaseStudy = models.CaseStudy || mongoose.model('CaseStudy', CaseStudySchema)
+delete (models as Record<string, unknown>).CaseStudy
+export const CaseStudy = mongoose.model('CaseStudy', CaseStudySchema)
