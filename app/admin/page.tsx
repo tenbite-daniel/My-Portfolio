@@ -1,5 +1,10 @@
+import { Suspense } from 'react'
 import { AdminPage } from './admin-client'
 
 export default function Page() {
-  return <AdminPage />
+  return (
+    <Suspense>
+      <AdminPage />
+    </Suspense>
+  )
 }

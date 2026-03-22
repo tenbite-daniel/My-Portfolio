@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useRef, useEffect, useCallback } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { ProfileSidebar } from '@/components/profile-sidebar'
 import { AboutSection } from '@/components/about-section'
 import { PortfolioSection } from '@/components/portfolio-section'
@@ -29,7 +29,8 @@ const ADMIN_TABS = ['dashboard', ...PUBLIC_TABS, 'contacts', 'settings']
 
 export function AdminPage() {
   const router = useRouter()
-  const [activeSection, setActiveSection] = useState('dashboard')
+  const searchParams = useSearchParams()
+  const [activeSection, setActiveSection] = useState(() => searchParams.get('tab') ?? 'dashboard')
   const [sidebarProfile, setSidebarProfile] = useState<ProfileData>(profileData)
   const [aboutDescription, setAboutDescription] = useState<string[] | null>(null)
   const [aboutTestimonials, setAboutTestimonials] = useState<{ name: string; email: string; text: string; avatar?: string }[] | null>(null)
@@ -92,8 +93,17 @@ export function AdminPage() {
     return () => window.removeEventListener('profile-updated', handler)
   }, [cachedFetch])
 
+  useEffect(() => {
+    const tab = searchParams.get('tab') ?? 'dashboard'
+    setActiveSection(tab)
+  }, [searchParams])
+
   const handleTabClick = (section: string) => {
     setActiveSection(section)
+    const params = new URLSearchParams()
+    if (section !== 'dashboard') params.set('tab', section)
+    const qs = params.toString()
+    router.replace(qs ? `/admin?${qs}` : '/admin', { scroll: false })
     const nav = navRef.current
     if (nav) {
       const btn = nav.querySelector(`[data-section="${section}"]`) as HTMLElement
