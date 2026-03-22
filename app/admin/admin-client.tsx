@@ -35,6 +35,7 @@ export function AdminPage() {
   const [showMetrics, setShowMetrics] = useState(true)
   const [showBlog, setShowBlog] = useState(true)
   const [showCaseStudies, setShowCaseStudies] = useState(true)
+  const [showKeyOutcomes, setShowKeyOutcomes] = useState(true)
   const [cvUrl, setCvUrl] = useState<string | null>(null)
   const navRef = useRef<HTMLElement>(null)
   const mainRef = useRef<HTMLDivElement>(null)
@@ -67,6 +68,7 @@ export function AdminPage() {
         if (typeof about?.showMetrics === 'boolean') setShowMetrics(about.showMetrics)
         if (typeof about?.showBlog === 'boolean') setShowBlog(about.showBlog)
         if (typeof about?.showCaseStudies === 'boolean') setShowCaseStudies(about.showCaseStudies)
+        if (typeof about?.showKeyOutcomes === 'boolean') setShowKeyOutcomes(about.showKeyOutcomes)
       })
       .catch(() => {})
 
@@ -174,7 +176,7 @@ export function AdminPage() {
             {activeSection === 'dashboard' && <AdminDashboard cache={cache} cachedFetch={cachedFetch} updateCache={updateCache} />}
             {activeSection === 'about' && <AboutSection data={aboutData} isAdmin initialDescription={aboutDescription ?? undefined} initialTestimonials={aboutTestimonials ?? undefined} onDescriptionSaved={setAboutDescription} cache={cache} cachedFetch={cachedFetch} updateCache={updateCache} />}
             {activeSection === 'projects' && <PortfolioSection isAdmin initialShowMetrics={showMetrics} cache={cache} cachedFetch={cachedFetch} updateCache={updateCache} />}
-            {activeSection === 'case studies' && <CaseStudiesSection isAdmin initialShowCaseStudies={showCaseStudies} />}
+            {activeSection === 'case studies' && <CaseStudiesSection isAdmin initialShowCaseStudies={showCaseStudies} initialShowKeyOutcomes={showKeyOutcomes} />}
             {activeSection === 'blog' && <BlogSection isAdmin initialShowBlog={showBlog} cache={cache} cachedFetch={cachedFetch} updateCache={updateCache} />}
             {activeSection === 'github' && <AdminGitHubRepos cache={cache} cachedFetch={cachedFetch} updateCache={updateCache} />}
             {activeSection === 'resume' && <AdminResumeEditor onCvUrlChange={setCvUrl} cache={cache} cachedFetch={cachedFetch} updateCache={updateCache} />}
