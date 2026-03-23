@@ -2,8 +2,6 @@ import { NextRequest, NextResponse } from 'next/server'
 import { verifyToken } from '@/lib/auth'
 import { MongoClient } from 'mongodb'
 
-export const runtime = 'nodejs'
-
 let client: MongoClient | null = null
 async function getMaintenanceMode(): Promise<boolean> {
   try {
@@ -18,7 +16,7 @@ async function getMaintenanceMode(): Promise<boolean> {
   }
 }
 
-export async function middleware(req: NextRequest) {
+export async function proxy(req: NextRequest) {
   const host = req.headers.get('host') ?? ''
   const isAdminSubdomain = host.startsWith('admin.')
   const { pathname } = req.nextUrl
