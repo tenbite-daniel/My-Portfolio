@@ -863,6 +863,7 @@ export function AboutSection({ data = aboutData, isAdmin = false, initialDescrip
                         width={80}
                         height={48}
                         className="flex-shrink-0 object-contain opacity-60 hover:opacity-100 transition-opacity"
+                        style={{ height: 'auto' }}
                         loading="lazy"
                       />
                     ))}
