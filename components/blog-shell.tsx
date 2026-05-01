@@ -22,12 +22,15 @@ async function getCvUrl() {
 
 async function getShowBlog() {
   await connectDB()
-  const doc = await About.findOne({}, { showBlog: 1 }).lean() as { showBlog?: boolean } | null
-  return doc?.showBlog !== false
+  const doc = await About.findOne({}, { showBlog: 1, showCaseStudies: 1 }).lean() as { showBlog?: boolean; showCaseStudies?: boolean } | null
+  return {
+    showBlog: doc?.showBlog !== false,
+    showCaseStudies: doc?.showCaseStudies !== false,
+  }
 }
 
 export async function BlogShell({ children, activePage = 'blog' }: { children: ReactNode, activePage?: string }) {
-  const [profileDoc, cvUrl, showBlog] = await Promise.all([getProfile(), getCvUrl(), getShowBlog()])
+  const [profileDoc, cvUrl, { showBlog, showCaseStudies }] = await Promise.all([getProfile(), getCvUrl(), getShowBlog()])
 
   const profile = profileDoc
     ? {
@@ -82,7 +85,7 @@ export async function BlogShell({ children, activePage = 'blog' }: { children: R
                 >
                   projects
                 </Link>
-                {(['github', 'resume', 'case studies', 'contact'] as const).map((section) => (
+                {(['github', 'resume', 'contact'] as const).map((section) => (
                   <Link
                     key={section}
                     href={`/?tab=${section}`}
@@ -91,6 +94,14 @@ export async function BlogShell({ children, activePage = 'blog' }: { children: R
                     {section}
                   </Link>
                 ))}
+                {showCaseStudies && (
+                  <Link
+                    href="/?tab=case studies"
+                    className="px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-medium capitalize transition-colors whitespace-nowrap flex-shrink-0 text-muted-foreground hover:text-foreground hover:bg-secondary"
+                  >
+                    case studies
+                  </Link>
+                )}
                 {showBlog && (
                   <Link
                     href="/blog"
