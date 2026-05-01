@@ -1,7 +1,7 @@
 import * as cheerio from 'cheerio'
 
 const GITHUB_USERNAME = 'tenbite-daniel'
-const REVALIDATE = 86400
+const REVALIDATE = 3600
 
 export async function fetchGitHubData() {
   const [contribRes, userRes] = await Promise.all([

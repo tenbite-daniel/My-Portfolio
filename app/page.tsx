@@ -5,39 +5,34 @@ import { Testimony } from '@/models/Testimony'
 import { Project } from '@/models/Project'
 import { Resume } from '@/models/Resume'
 import { CaseStudy } from '@/models/CaseStudy'
+import { FeaturedRepo } from '@/models/FeaturedRepo'
 import { profileData, aboutData, resumeData } from '@/lib/portfolio-data'
 import { HomeClient } from '@/components/home-client'
 import { GitHubSection } from '@/components/github-section'
-import { cacheTag } from 'next/cache'
+import { fetchGitHubData, fetchFeaturedRepos } from '@/lib/github'
 import { Suspense } from 'react'
 
+export const revalidate = 3600
+
 async function getProfile() {
-  'use cache'
-  cacheTag('profile')
   await connectDB()
   const doc = await Profile.findOne().lean()
-  return JSON.parse(JSON.stringify(doc))
+  return doc ? JSON.parse(JSON.stringify(doc)) : null
 }
 
 async function getAbout() {
-  'use cache'
-  cacheTag('about')
   await connectDB()
   const doc = await About.findOne().lean()
-  return JSON.parse(JSON.stringify(doc))
+  return doc ? JSON.parse(JSON.stringify(doc)) : null
 }
 
 async function getTestimonials() {
-  'use cache'
-  cacheTag('testimonials')
   await connectDB()
   const docs = await Testimony.find({ status: 'approved' }).sort({ createdAt: -1 }).lean()
   return JSON.parse(JSON.stringify(docs))
 }
 
 async function getResume() {
-  'use cache'
-  cacheTag('resume')
   await connectDB()
   const doc = await Resume.findOne().lean() as Record<string, unknown> | null
   const plain = doc ? JSON.parse(JSON.stringify(doc)) : null
@@ -50,29 +45,36 @@ async function getResume() {
 }
 
 async function getProjects() {
-  'use cache'
-  cacheTag('projects')
   await connectDB()
   const docs = await Project.find().sort({ order: 1, createdAt: -1 }).lean()
   return JSON.parse(JSON.stringify(docs))
 }
 
+async function getGitHubData() {
+  await connectDB()
+  const [githubData, featuredRepoDocs] = await Promise.all([
+    fetchGitHubData().catch(() => null),
+    FeaturedRepo.find().sort({ order: 1 }).lean() as Promise<{ repoName: string }[]>,
+  ])
+  const featuredRepos = await fetchFeaturedRepos(featuredRepoDocs.map((d) => d.repoName))
+  return { githubData, featuredRepos }
+}
+
 async function getCaseStudies() {
-  'use cache'
-  cacheTag('case-studies')
   await connectDB()
   const docs = await CaseStudy.find().sort({ order: 1 }).lean()
   return JSON.parse(JSON.stringify(docs))
 }
 
 export default async function Home() {
-  const [profileDoc, aboutDoc, testimonials, projectDocs, resumeDoc, caseStudyDocs] = await Promise.all([
+  const [profileDoc, aboutDoc, testimonials, projectDocs, resumeDoc, caseStudyDocs, { githubData, featuredRepos }] = await Promise.all([
     getProfile(),
     getAbout(),
     getTestimonials(),
     getProjects(),
     getResume(),
     getCaseStudies(),
+    getGitHubData(),
   ])
 
   const profile = profileDoc
@@ -115,9 +117,7 @@ export default async function Home() {
   return (
     <Suspense>
       <HomeClient profile={profile} aboutDescription={description} aboutServices={services} aboutClients={clients} aboutShowClients={showClients} showMetrics={showMetrics} showBlog={showBlog} showCaseStudies={showCaseStudies} showKeyOutcomes={showKeyOutcomes} initialProjects={projects} initialCaseStudies={caseStudies} testimonials={testimonials} resumeData={resumeDoc} githubSection={
-        <Suspense key="github" fallback={<div className="flex items-center justify-center py-12"><p className="text-muted-foreground">Loading GitHub data...</p></div>}>
-          <GitHubSection />
-        </Suspense>
+        <GitHubSection githubData={githubData} featuredRepos={featuredRepos} />
       } />
     </Suspense>
   )

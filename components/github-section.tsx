@@ -1,27 +1,16 @@
 import { Github, Star } from 'lucide-react'
 import { GitHubClient } from '@/components/github-client'
-import { fetchGitHubData, fetchFeaturedRepos } from '@/lib/github'
-import { connectDB } from '@/lib/mongodb'
-import { FeaturedRepo } from '@/models/FeaturedRepo'
-import { cacheTag } from 'next/cache'
+import type { fetchGitHubData, GitHubRepo } from '@/lib/github'
 
 const GITHUB_USERNAME = 'tenbite-daniel'
 
-async function getFeaturedRepos() {
-  'use cache'
-  cacheTag('featured-repos')
-  await connectDB()
-  const docs = await FeaturedRepo.find().sort({ order: 1 }).lean() as { repoName: string }[]
-  const names = docs.map((d) => d.repoName)
-  return fetchFeaturedRepos(names)
+interface GitHubSectionProps {
+  githubData: Awaited<ReturnType<typeof fetchGitHubData>> | null
+  featuredRepos: GitHubRepo[]
 }
 
-export async function GitHubSection() {
-  let data: Awaited<ReturnType<typeof fetchGitHubData>>
-
-  try {
-    data = await fetchGitHubData()
-  } catch {
+export function GitHubSection({ githubData, featuredRepos }: GitHubSectionProps) {
+  if (!githubData) {
     return (
       <section className="space-y-12">
         <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-4">
@@ -31,8 +20,7 @@ export async function GitHubSection() {
     )
   }
 
-  const featuredRepos = await getFeaturedRepos()
-  const { user, totalContributions, weeks, monthlyData } = data
+  const { user, totalContributions, weeks, monthlyData } = githubData
 
   return (
     <section className="space-y-12">

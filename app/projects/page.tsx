@@ -5,13 +5,12 @@ import { connectDB } from '@/lib/mongodb'
 import { Project } from '@/models/Project'
 import { About } from '@/models/About'
 import { SiteSettings } from '@/models/SiteSettings'
-import { cacheTag } from 'next/cache'
+
+export const revalidate = 3600
 
 const BASE_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://localhost:3000'
 
 async function getSiteSettings() {
-  'use cache'
-  cacheTag('site')
   await connectDB()
   const doc = await SiteSettings.findOne().lean()
   return doc ? JSON.parse(JSON.stringify(doc)) : null
@@ -43,16 +42,12 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 async function getProjects() {
-  'use cache'
-  cacheTag('projects')
   await connectDB()
   const docs = await Project.find().sort({ order: 1, createdAt: -1 }).lean()
   return JSON.parse(JSON.stringify(docs))
 }
 
 async function getShowMetrics() {
-  'use cache'
-  cacheTag('about')
   await connectDB()
   const doc = await About.findOne({}, { showMetrics: 1 }).lean() as { showMetrics?: boolean } | null
   return doc?.showMetrics !== false

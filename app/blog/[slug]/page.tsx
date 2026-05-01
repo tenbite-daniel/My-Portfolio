@@ -8,31 +8,26 @@ import { Blog } from '@/models/Blog'
 import { SiteSettings } from '@/models/SiteSettings'
 import { About } from '@/models/About'
 import { Profile } from '@/models/Profile'
-import { cacheTag } from 'next/cache'
 import { BlogShell } from '@/components/blog-shell'
 import { ShareButton } from '@/components/share-button'
+
+export const revalidate = 3600
 
 const BASE_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://localhost:3000'
 
 async function getAuthorName() {
-  'use cache'
-  cacheTag('profile')
   await connectDB()
   const doc = await Profile.findOne({}, { name: 1 }).lean() as { name?: string } | null
   return doc?.name || null
 }
 
 async function getShowBlog() {
-  'use cache'
-  cacheTag('about')
   await connectDB()
   const doc = await About.findOne({}, { showBlog: 1 }).lean() as { showBlog?: boolean } | null
   return doc?.showBlog !== false
 }
 
 async function getPost(slug: string) {
-  'use cache'
-  cacheTag('blog')
   await connectDB()
   const now = new Date()
   const post = await Blog.findOne({
@@ -47,8 +42,6 @@ async function getPost(slug: string) {
 }
 
 async function getSiteSettings() {
-  'use cache'
-  cacheTag('site')
   await connectDB()
   const doc = await SiteSettings.findOne().lean()
   return doc ? JSON.parse(JSON.stringify(doc)) : null
@@ -199,4 +192,3 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
     </BlogShell>
   )
 }
-

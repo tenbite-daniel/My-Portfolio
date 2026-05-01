@@ -3,11 +3,13 @@ import { Poppins } from 'next/font/google'
 import { Analytics } from '@vercel/analytics/next'
 import Script from 'next/script'
 import { Toaster } from '@/components/ui/sonner'
+import { ThemeProvider } from '@/components/theme-provider'
 import { connectDB } from '@/lib/mongodb'
 import { SiteSettings } from '@/models/SiteSettings'
 import { Profile } from '@/models/Profile'
-import { cacheTag } from 'next/cache'
 import './globals.css'
+
+export const revalidate = 3600
 
 const BASE_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://localhost:3000'
 
@@ -21,16 +23,12 @@ const poppins = Poppins({
 })
 
 async function getSiteSettings() {
-  'use cache'
-  cacheTag('site')
   await connectDB()
   const doc = await SiteSettings.findOne().lean()
   return doc ? JSON.parse(JSON.stringify(doc)) : null
 }
 
 async function getProfile() {
-  'use cache'
-  cacheTag('profile')
   await connectDB()
   const doc = await Profile.findOne().lean()
   return doc ? JSON.parse(JSON.stringify(doc)) : null
@@ -163,8 +161,16 @@ export default async function RootLayout({
   }
 
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
+      <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `(function(){try{var t=localStorage.getItem('theme');if(t==='light'){document.documentElement.classList.remove('dark')}else{document.documentElement.classList.add('dark')}}catch(e){}})()`,
+          }}
+        />
+      </head>
       <body className={`${poppins.variable} font-sans antialiased`}>
+        <ThemeProvider>
         {jsonLdProps && <JsonLd {...jsonLdProps} />}
         {children}
         <Analytics />
@@ -177,6 +183,7 @@ export default async function RootLayout({
             </Script>
           </>
         )}
+        </ThemeProvider>
       </body>
     </html>
   )

@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
+import Link from 'next/link'
 import { ProfileSidebar } from '@/components/profile-sidebar'
 import { AboutSection } from '@/components/about-section'
 import { ResumeSection } from '@/components/resume-section'
@@ -99,12 +100,12 @@ export function HomeClient({ profile, aboutDescription, aboutServices, aboutClie
                 >
                   about
                 </button>
-                <a
+                <Link
                   href="/projects"
                   className="px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-medium capitalize transition-colors whitespace-nowrap flex-shrink-0 text-muted-foreground hover:text-foreground hover:bg-secondary"
                 >
                   projects
-                </a>
+                </Link>
                 {publicTabs.map((section) => (
                   <button
                     key={section}
@@ -120,21 +121,21 @@ export function HomeClient({ profile, aboutDescription, aboutServices, aboutClie
                   </button>
                 ))}
                 {showBlog && (
-                  <a
+                  <Link
                     href="/blog"
                     className="px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-medium capitalize transition-colors whitespace-nowrap flex-shrink-0 text-muted-foreground hover:text-foreground hover:bg-secondary"
                   >
                     blog
-                  </a>
+                  </Link>
                 )}
-                <a
-                  href={cvUrl ? '/api/resume-cv?preview=1' : undefined}
+                <Link
+                  href={cvUrl ? '/api/resume-cv?preview=1' : '#'}
                   target="_blank"
                   rel="noopener noreferrer"
                   className={`ml-auto flex-shrink-0 px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-medium whitespace-nowrap bg-accent text-accent-foreground transition-opacity ${!cvUrl ? 'opacity-40 pointer-events-none' : 'hover:opacity-90'}`}
                 >
                   Preview Resume
-                </a>
+                </Link>
               </nav>
               <div className="pointer-events-none absolute right-0 top-0 bottom-0 w-12 bg-gradient-to-l from-card to-transparent lg:hidden" />
             </div>

@@ -7,13 +7,12 @@ import type { Metadata } from 'next'
 import { connectDB } from '@/lib/mongodb'
 import { Project } from '@/models/Project'
 import { About } from '@/models/About'
-import { cacheTag } from 'next/cache'
 import { BlogShell } from '@/components/blog-shell'
 import { ProjectMetrics } from '@/components/project-metrics'
 
+export const revalidate = 3600
+
 async function getProject(id: string) {
-  'use cache'
-  cacheTag('projects')
   await connectDB()
   try {
     const doc = await Project.findById(id).lean()
@@ -24,8 +23,6 @@ async function getProject(id: string) {
 }
 
 async function getShowMetrics() {
-  'use cache'
-  cacheTag('about')
   await connectDB()
   const doc = await About.findOne({}, { showMetrics: 1 }).lean() as { showMetrics?: boolean } | null
   return doc?.showMetrics !== false
