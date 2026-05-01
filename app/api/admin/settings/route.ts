@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { revalidateTag } from 'next/cache'
+import { revalidatePath } from 'next/cache'
 import { connectDB } from '@/lib/mongodb'
 import { Profile } from '@/models/Profile'
 import { SiteSettings } from '@/models/SiteSettings'
@@ -24,13 +24,13 @@ export async function PATCH(req: Request) {
 
     if (section === 'profile') {
       const profile = await Profile.findOneAndUpdate({}, { $set: data }, { upsert: true, returnDocument: 'after' })
-      revalidateTag('profile', 'max')
+      revalidatePath('/', 'layout')
       return NextResponse.json({ profile })
     }
 
     if (section === 'site') {
       const site = await SiteSettings.findOneAndUpdate({}, { $set: data }, { upsert: true, returnDocument: 'after' })
-      revalidateTag('site', 'max')
+      revalidatePath('/', 'layout')
       return NextResponse.json({ site })
     }
 

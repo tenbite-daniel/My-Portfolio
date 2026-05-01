@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { revalidateTag } from 'next/cache'
+import { revalidatePath } from 'next/cache'
 import { connectDB } from '@/lib/mongodb'
 import { Blog } from '@/models/Blog'
 
@@ -30,7 +30,7 @@ export async function POST(req: Request) {
     const body = await req.json()
     await connectDB()
     const post = await Blog.create(body)
-    revalidateTag('blog', 'max')
+    revalidatePath('/', 'layout')
     return NextResponse.json({ post })
   } catch {
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
@@ -42,7 +42,7 @@ export async function PATCH(req: Request) {
     const { _id, ...body } = await req.json()
     await connectDB()
     const post = await Blog.findByIdAndUpdate(_id, { $set: body }, { new: true })
-    revalidateTag('blog', 'max')
+    revalidatePath('/', 'layout')
     return NextResponse.json({ post })
   } catch {
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
@@ -54,7 +54,7 @@ export async function DELETE(req: Request) {
     const { _id } = await req.json()
     await connectDB()
     await Blog.findByIdAndDelete(_id)
-    revalidateTag('blog', 'max')
+    revalidatePath('/', 'layout')
     return NextResponse.json({ success: true })
   } catch {
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })

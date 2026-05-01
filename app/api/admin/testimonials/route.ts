@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { revalidateTag } from 'next/cache'
+import { revalidatePath } from 'next/cache'
 import { connectDB } from '@/lib/mongodb'
 import { Testimony } from '@/models/Testimony'
 
@@ -38,7 +38,7 @@ export async function PATCH(req: Request) {
     await connectDB()
     const { id, status } = await req.json()
     const testimony = await Testimony.findByIdAndUpdate(id, { status }, { returnDocument: 'after' })
-    if (status === 'approved') revalidateTag('testimonials', 'max')
+    if (status === 'approved') revalidatePath('/', 'layout')
     return NextResponse.json({ testimony })
   } catch {
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })

@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { revalidateTag } from 'next/cache'
+import { revalidatePath } from 'next/cache'
 import { connectDB } from '@/lib/mongodb'
 import { About } from '@/models/About'
 import mongoose from 'mongoose'
@@ -24,7 +24,7 @@ export async function PATCH(req: Request) {
       { $set: body },
       { upsert: true, returnDocument: 'after' }
     )
-    revalidateTag('about', 'max')
+    revalidatePath('/', 'layout')
     return NextResponse.json({ about: result })
   } catch {
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })

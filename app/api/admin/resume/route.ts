@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { revalidateTag } from 'next/cache'
+import { revalidatePath } from 'next/cache'
 import { connectDB } from '@/lib/mongodb'
 import { Resume } from '@/models/Resume'
 import { resumeData } from '@/lib/portfolio-data'
@@ -24,7 +24,7 @@ export async function PATCH(req: Request) {
     const body = await req.json()
     await connectDB()
     await Resume.findOneAndUpdate({}, { $set: body }, { upsert: true, new: true })
-    revalidateTag('resume', 'max')
+    revalidatePath('/', 'layout')
     return NextResponse.json({ success: true })
   } catch {
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })

@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { revalidateTag } from 'next/cache'
+import { revalidatePath } from 'next/cache'
 import { connectDB } from '@/lib/mongodb'
 import { CaseStudy } from '@/models/CaseStudy'
 
@@ -19,7 +19,7 @@ export async function POST(req: Request) {
     await connectDB()
     const count = await CaseStudy.countDocuments()
     const study = await CaseStudy.create({ ...body, order: count })
-    revalidateTag('case-studies', 'max')
+    revalidatePath('/', 'layout')
     return NextResponse.json({ study })
   } catch {
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
@@ -31,7 +31,7 @@ export async function PATCH(req: Request) {
     const { id, ...body } = await req.json()
     await connectDB()
     const study = await CaseStudy.findByIdAndUpdate(id, body, { returnDocument: 'after' }).lean()
-    revalidateTag('case-studies', 'max')
+    revalidatePath('/', 'layout')
     return NextResponse.json({ study })
   } catch {
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
@@ -43,7 +43,7 @@ export async function DELETE(req: Request) {
     const { id } = await req.json()
     await connectDB()
     await CaseStudy.findByIdAndDelete(id)
-    revalidateTag('case-studies', 'max')
+    revalidatePath('/', 'layout')
     return NextResponse.json({ ok: true })
   } catch {
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
