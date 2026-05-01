@@ -1,4 +1,6 @@
 import { NextResponse } from 'next/server'
+import { connectDB } from '@/lib/mongodb'
+import { Contact } from '@/models/Contact'
 
 export async function POST(req: Request) {
   try {
@@ -36,6 +38,10 @@ export async function POST(req: Request) {
       const err = await telegramRes.json()
       return NextResponse.json({ error: err.description || 'Telegram error' }, { status: 500 })
     }
+
+    // Save to MongoDB
+    await connectDB()
+    await Contact.create({ name, email, phone: `${countryCode} ${phone}`.trim(), subject, message })
 
     return NextResponse.json({ success: true })
   } catch {

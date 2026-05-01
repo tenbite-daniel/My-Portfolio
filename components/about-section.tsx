@@ -1,8 +1,13 @@
 'use client'
 
-import { PenTool, Code, Smartphone, Zap, ChevronLeft, ChevronRight, MessageSquarePlus, Send } from 'lucide-react'
+import * as LucideIcons from 'lucide-react'
+import { ChevronLeft, ChevronRight, MessageSquarePlus, Send, Pencil, Plus, Trash2, Loader2, X, Check, Search, Link2, Link2Off } from 'lucide-react'
+import Image from 'next/image'
 import { aboutData } from '@/lib/portfolio-data'
-import { useRef, useState, useEffect } from 'react'
+import { useRef, useState, useEffect, useCallback } from 'react'
+import { useEditor, EditorContent } from '@tiptap/react'
+import StarterKit from '@tiptap/starter-kit'
+import Link from '@tiptap/extension-link'
 import {
   Dialog,
   DialogContent,
@@ -12,28 +17,359 @@ import {
 } from '@/components/ui/dialog'
 import { toast } from 'sonner'
 
-const iconMap = {
-  Code,
-  Zap,
-  Smartphone,
-  PenTool,
+const FORWARD_REF = Symbol.for('react.forward_ref')
+const ALL_ICON_NAMES = Object.keys(LucideIcons).filter(
+  (k) => /^[A-Z]/.test(k) && !k.endsWith('Icon') && (LucideIcons as Record<string, { $$typeof?: symbol }>)[k]?.$$typeof === FORWARD_REF
+)
+
+function LucideIcon({ name, className, strokeWidth }: { name: string; className?: string; strokeWidth?: number }) {
+  const Icon = (LucideIcons as unknown as Record<string, LucideIcons.LucideIcon>)[name]
+  if (!Icon) return null
+  return <Icon className={className} strokeWidth={strokeWidth} />
+}
+
+function IconPicker({ value, onChange }: { value: string; onChange: (name: string) => void }) {
+  const [query, setQuery] = useState('')
+  const [open, setOpen] = useState(false)
+  const ref = useRef<HTMLDivElement>(null)
+
+  const filtered = query.trim()
+    ? ALL_ICON_NAMES.filter((n) => n.toLowerCase().includes(query.toLowerCase())).slice(0, 60)
+    : ALL_ICON_NAMES.slice(0, 60)
+
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false)
+    }
+    document.addEventListener('mousedown', handler)
+    return () => document.removeEventListener('mousedown', handler)
+  }, [])
+
+  return (
+    <div ref={ref} className="relative flex-1">
+      <div
+        className="flex items-center gap-2 px-3 py-2 bg-card border border-border rounded-lg cursor-pointer hover:border-accent transition-colors"
+        onClick={() => setOpen((o) => !o)}
+      >
+        <LucideIcon name={value} className="w-4 h-4 text-accent flex-shrink-0" />
+        <span className="text-sm text-foreground flex-1 truncate">{value || 'Select icon'}</span>
+        <Search className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" />
+      </div>
+      {open && (
+        <div className="absolute z-50 top-full mt-1 left-0 right-0 bg-card border border-border rounded-xl shadow-lg">
+          <div className="p-2 border-b border-border">
+            <input
+              autoFocus
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Search icons..."
+              className="w-full px-3 py-1.5 bg-secondary border border-border rounded-lg text-sm text-foreground placeholder:text-muted-foreground focus:border-accent focus:outline-none"
+            />
+          </div>
+          <div className="grid grid-cols-6 gap-1 p-2 max-h-48 overflow-y-auto">
+            {filtered.map((name) => (
+              <button
+                key={name}
+                type="button"
+                title={name}
+                onClick={() => { onChange(name); setOpen(false); setQuery('') }}
+                className={`flex items-center justify-center w-full aspect-square rounded-lg hover:bg-accent/10 transition-colors ${
+                  value === name ? 'bg-accent/20 ring-1 ring-accent' : ''
+                }`}
+              >
+                <LucideIcon name={name} className="w-4 h-4 text-foreground" />
+              </button>
+            ))}
+            {filtered.length === 0 && (
+              <p className="col-span-6 text-xs text-muted-foreground text-center py-4">No icons found</p>
+            )}
+          </div>
+          {!query && (
+            <p className="text-xs text-muted-foreground text-center pb-2">Search to see all {ALL_ICON_NAMES.length} icons</p>
+          )}
+        </div>
+      )}
+    </div>
+  )
+}
+
+type Service = { icon: string; title: string; description: string }
+type Client = { name: string; logo: string }
+
+function ParagraphEditor({ value, index, total, onChange, onRemove }: {
+  value: string
+  index: number
+  total: number
+  onChange: (html: string) => void
+  onRemove: () => void
+}) {
+  const [linkUrl, setLinkUrl] = useState('')
+  const [showLinkInput, setShowLinkInput] = useState(false)
+
+  const editor = useEditor({
+    immediatelyRender: false,
+    extensions: [
+      StarterKit,
+      Link.configure({ openOnClick: false, HTMLAttributes: { target: '_blank', rel: 'noopener noreferrer' } }),
+    ],
+    content: value,
+    onUpdate: ({ editor }) => onChange(editor.getHTML()),
+    editorProps: { attributes: { class: 'min-h-[72px] px-3 py-2.5 text-sm text-foreground focus:outline-none' } },
+  })
+
+  const applyLink = () => {
+    if (!editor) return
+    const url = linkUrl.trim()
+    if (!url) { editor.chain().focus().unsetLink().run(); setShowLinkInput(false); return }
+    const href = url.startsWith('http') ? url : `https://${url}`
+    editor.chain().focus().setLink({ href }).run()
+    setLinkUrl('')
+    setShowLinkInput(false)
+  }
+
+  if (!editor) return null
+
+  return (
+    <div className="flex gap-2 items-start">
+      <div className="flex-1 bg-secondary border border-border rounded-xl overflow-hidden focus-within:border-accent focus-within:ring-2 focus-within:ring-accent/20 transition-all">
+        <div className="flex items-center gap-0.5 px-2 py-1.5 border-b border-border bg-card">
+          <button type="button" title="Bold" onMouseDown={(e) => { e.preventDefault(); editor.chain().focus().toggleBold().run() }}
+            className={`p-1.5 rounded text-xs transition-colors ${editor.isActive('bold') ? 'bg-accent text-accent-foreground' : 'text-muted-foreground hover:text-foreground hover:bg-secondary'}`}>
+            <strong>B</strong>
+          </button>
+          <button type="button" title="Italic" onMouseDown={(e) => { e.preventDefault(); editor.chain().focus().toggleItalic().run() }}
+            className={`p-1.5 rounded text-xs transition-colors ${editor.isActive('italic') ? 'bg-accent text-accent-foreground' : 'text-muted-foreground hover:text-foreground hover:bg-secondary'}`}>
+            <em>I</em>
+          </button>
+          <div className="w-px h-4 bg-border mx-1" />
+          <button type="button" title={editor.isActive('link') ? 'Remove link' : 'Add link'}
+            onMouseDown={(e) => {
+              e.preventDefault()
+              if (editor.isActive('link')) { editor.chain().focus().unsetLink().run(); return }
+              setShowLinkInput((v) => !v)
+            }}
+            className={`p-1.5 rounded transition-colors ${editor.isActive('link') ? 'bg-accent text-accent-foreground' : 'text-muted-foreground hover:text-foreground hover:bg-secondary'}`}>
+            {editor.isActive('link') ? <Link2Off className="w-3.5 h-3.5" /> : <Link2 className="w-3.5 h-3.5" />}
+          </button>
+          {showLinkInput && (
+            <div className="flex items-center gap-1 ml-1">
+              <input
+                autoFocus
+                value={linkUrl}
+                onChange={(e) => setLinkUrl(e.target.value)}
+                onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); applyLink() } if (e.key === 'Escape') setShowLinkInput(false) }}
+                placeholder="https://..."
+                className="px-2 py-1 text-xs bg-card border border-border rounded-lg text-foreground placeholder:text-muted-foreground focus:border-accent focus:outline-none w-44"
+              />
+              <button type="button" onMouseDown={(e) => { e.preventDefault(); applyLink() }}
+                className="p-1 rounded bg-accent text-accent-foreground hover:opacity-90 transition-opacity">
+                <Check className="w-3 h-3" />
+              </button>
+            </div>
+          )}
+        </div>
+        <EditorContent editor={editor} />
+      </div>
+      <button
+        onClick={onRemove}
+        disabled={total === 1}
+        className="mt-2 w-8 h-8 flex-shrink-0 rounded-lg bg-destructive/10 text-destructive hover:bg-destructive hover:text-white flex items-center justify-center transition-colors disabled:opacity-30"
+      >
+        <Trash2 className="w-4 h-4" />
+      </button>
+    </div>
+  )
 }
 
 interface AboutSectionProps {
   data?: typeof aboutData
+  isAdmin?: boolean
+  initialDescription?: string[]
+  initialServices?: Service[]
+  initialClients?: Client[]
+  initialShowClients?: boolean
+  initialTestimonials?: { name: string; email: string; text: string; avatar?: string }[]
+  onDescriptionSaved?: (desc: string[]) => void
 }
 
-export function AboutSection({ data = aboutData }: AboutSectionProps) {
-  const total = data.testimonials.length
-  const items = [...data.testimonials, ...data.testimonials, ...data.testimonials]
-  const [index, setIndex] = useState(total)
+export function AboutSection({ data = aboutData, isAdmin = false, initialDescription, initialServices, initialClients, initialShowClients, initialTestimonials, onDescriptionSaved }: AboutSectionProps) {
+  const [dbTestimonials, setDbTestimonials] = useState<{ name: string; email: string; text: string; avatar?: string }[] | null>(initialTestimonials ?? null)
+  const [dbDescription, setDbDescription] = useState<string[] | null>(initialDescription ?? null)
+  const [dbServices, setDbServices] = useState<Service[] | null>(initialServices ?? null)
+  const [editing, setEditing] = useState(false)
+  const [paragraphs, setParagraphs] = useState<string[]>([])
+  const [saving, setSaving] = useState(false)
+  const [editingServices, setEditingServices] = useState(false)
+  const [servicesDraft, setServicesDraft] = useState<Service[]>([])
+  const [savingServices, setSavingServices] = useState(false)
+  const [dbClients, setDbClients] = useState<Client[] | null>(initialClients ?? null)
+  const [showClients, setShowClients] = useState(initialShowClients ?? true)
+  const [togglingClients, setTogglingClients] = useState(false)
+  const [editingClients, setEditingClients] = useState(false)
+  const [clientsDraft, setClientsDraft] = useState<Client[]>([])
+  const [savingClients, setSavingClients] = useState(false)
+  const [testimonyOpen, setTestimonyOpen] = useState(false)
+  const [testimonyForm, setTestimonyForm] = useState({ name: '', email: '', text: '' })
+  const [testimonyLoading, setTestimonyLoading] = useState(false)
+  const [avatarPreview, setAvatarPreview] = useState<string | null>(null)
+
+  const activeTestimonials = dbTestimonials ?? data.testimonials
+
+  const GAP = 16
+  const [cols, setCols] = useState(2)
+  const [cardWidth, setCardWidth] = useState(0)
+  const total = activeTestimonials.length
+  const minForNav = cols === 1 ? 2 : 3
+  const showNav = total >= minForNav
+  const canLoop = showNav
+  const items = canLoop ? [...activeTestimonials, ...activeTestimonials, ...activeTestimonials] : activeTestimonials
+
+  const [index, setIndex] = useState(0)
+
+  useEffect(() => {
+    setAnimated(false)
+    setIndex(canLoop ? total : 0)
+    setTimeout(() => setAnimated(true), 50)
+  }, [canLoop, total])
   const [paused, setPaused] = useState(false)
   const [animated, setAnimated] = useState(true)
   const pauseTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
-  const [testimonyOpen, setTestimonyOpen] = useState(false)
-  const [testimonyForm, setTestimonyForm] = useState({ name: '', email: '', text: '', avatar: '' })
-  const [testimonyLoading, setTestimonyLoading] = useState(false)
-  const [avatarPreview, setAvatarPreview] = useState<string | null>(null)
+  const containerRef = useRef<HTMLDivElement | null>(null)
+
+  const calcCardWidth = useCallback(() => {
+    const node = containerRef.current
+    if (!node) return
+    const w = node.getBoundingClientRect().width
+    if (!w) return
+    const c = window.innerWidth < 480 ? 1 : 2
+    setCols(c)
+    setCardWidth((w - GAP * (c - 1)) / c)
+  }, [])
+
+  const containerCallbackRef = useCallback((node: HTMLDivElement | null) => {
+    if (!node) return
+    containerRef.current = node
+    requestAnimationFrame(calcCardWidth)
+    window.addEventListener('resize', calcCardWidth)
+  }, [calcCardWidth])
+
+  useEffect(() => {
+    return () => window.removeEventListener('resize', calcCardWidth)
+  }, [calcCardWidth])
+
+  const startEditing = () => {
+    // Convert plain text to HTML if not already HTML
+    const desc = dbDescription ?? data.description
+    setParagraphs(desc.map((p) => p.startsWith('<') ? p : `<p>${p}</p>`))
+    setEditing(true)
+  }
+
+  const saveAbout = async () => {
+    setSaving(true)
+    const filtered = paragraphs.filter((p) => p.trim() !== '')
+    const res = await fetch('/api/admin/about', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ description: filtered }),
+    })
+    if (res.ok) {
+      setDbDescription(filtered)
+      setEditing(false)
+      onDescriptionSaved?.(filtered)
+      toast.success('About saved')
+    } else {
+      toast.error('Failed to save')
+    }
+    setSaving(false)
+  }
+
+  const startEditingServices = () => {
+    setServicesDraft(dbServices ?? data.services)
+    setEditingServices(true)
+  }
+
+  const saveServices = async () => {
+    setSavingServices(true)
+    const res = await fetch('/api/admin/about', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ services: servicesDraft }),
+    })
+    if (res.ok) {
+      setDbServices(servicesDraft)
+      setEditingServices(false)
+      toast.success('Services saved')
+    } else {
+      toast.error('Failed to save')
+    }
+    setSavingServices(false)
+  }
+
+  const updateService = (i: number, field: keyof Service, value: string) => {
+    setServicesDraft((prev) => prev.map((s, idx) => idx === i ? { ...s, [field]: value } : s))
+  }
+
+  const toggleShowClients = async () => {
+    setTogglingClients(true)
+    const next = !showClients
+    const res = await fetch('/api/admin/about', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ showClients: next }),
+    })
+    if (res.ok) {
+      setShowClients(next)
+      toast.success(next ? 'Clients section is now visible' : 'Clients section is now hidden')
+    } else {
+      toast.error('Failed to update')
+    }
+    setTogglingClients(false)
+  }
+
+  const uploadClientLogo = async (i: number, file: File) => {
+    const reader = new FileReader()
+    reader.onload = async () => {
+      const base64 = reader.result as string
+      // optimistic preview
+      updateClient(i, 'logo', base64)
+      try {
+        const res = await fetch('/api/admin/upload', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ data: base64, folder: 'portfolio/clients', public_id: `client-${Date.now()}-${i}` }),
+        })
+        const json = await res.json()
+        if (json.url) updateClient(i, 'logo', json.url)
+        else toast.error('Upload failed')
+      } catch {
+        toast.error('Upload failed')
+      }
+    }
+    reader.readAsDataURL(file)
+  }
+
+  const saveClients = async () => {
+    setSavingClients(true)
+    const res = await fetch('/api/admin/about', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ clients: clientsDraft }),
+    })
+    if (res.ok) {
+      setDbClients(clientsDraft)
+      setEditingClients(false)
+      toast.success('Clients saved')
+    } else {
+      toast.error('Failed to save')
+    }
+    setSavingClients(false)
+  }
+
+  const updateClient = (i: number, field: keyof Client, value: string) => {
+    setClientsDraft((prev) => prev.map((c, idx) => idx === i ? { ...c, [field]: value } : c))
+  }
+
+
 
   const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
@@ -46,25 +382,37 @@ export function AboutSection({ data = aboutData }: AboutSectionProps) {
   const handleTestimonySubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setTestimonyLoading(true)
-    // TODO: wire to backend/admin when ready
-    await new Promise((r) => setTimeout(r, 800))
+    try {
+      const res = await fetch('/api/admin/testimonials', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...testimonyForm, avatar: avatarPreview ?? undefined }),
+      })
+      if (res.ok) {
+        toast.success('Thank you! Your testimony is pending approval.')
+      } else {
+        toast.error('Failed to submit. Please try again.')
+      }
+    } catch {
+      toast.error('Failed to submit. Please try again.')
+    }
     setTestimonyLoading(false)
     setTestimonyOpen(false)
-    setTestimonyForm({ name: '', email: '', text: '', avatar: '' })
+    setTestimonyForm({ name: '', email: '', text: '' })
     setAvatarPreview(null)
-    toast.success('Thank you! Your testimony has been submitted.')
   }
 
   useEffect(() => {
+    if (!canLoop) return
     if (paused) return
     const interval = setInterval(() => {
       setIndex((i) => i + 1)
     }, 3000)
     return () => clearInterval(interval)
-  }, [paused])
+  }, [paused, canLoop])
 
-  // When we reach the end of the second set, silently jump back to the same position in the first set
   useEffect(() => {
+    if (!canLoop) return
     if (index >= total * 2) {
       const timer = setTimeout(() => {
         setAnimated(false)
@@ -84,6 +432,7 @@ export function AboutSection({ data = aboutData }: AboutSectionProps) {
   }, [index, total])
 
   const go = (dir: 'left' | 'right') => {
+    if (!canLoop && ((dir === 'left' && index === 0) || (dir === 'right' && index === total - 1))) return
     setPaused(true)
     setAnimated(true)
     setIndex((i) => i + (dir === 'right' ? 1 : -1))
@@ -94,201 +443,437 @@ export function AboutSection({ data = aboutData }: AboutSectionProps) {
     <div className="space-y-8 md:space-y-10">
       {/* About Me */}
       <div>
-        <h2 className="text-2xl md:text-3xl font-bold text-foreground mb-4">About Me</h2>
-        <div className="w-10 h-1 bg-accent rounded-full mb-6" />
-        <div className="space-y-4 text-sm md:text-base text-muted-foreground leading-relaxed">
-          {data.description.map((paragraph, index) => (
-            <p key={index}>{paragraph}</p>
-          ))}
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-2xl md:text-3xl font-bold text-foreground">About Me</h2>
+          {isAdmin && !editing && (
+            <button
+              onClick={startEditing}
+              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg bg-secondary border border-border hover:border-accent hover:text-accent transition-colors"
+            >
+              <Pencil className="w-3.5 h-3.5" />
+              Edit
+            </button>
+          )}
         </div>
+        <div className="w-10 h-1 bg-accent rounded-full mb-6" />
+        {editing ? (
+          <div className="space-y-4">
+            <div className="space-y-3">
+              {paragraphs.map((p, i) => (
+                <ParagraphEditor
+                  key={i}
+                  value={p}
+                  index={i}
+                  total={paragraphs.length}
+                  onChange={(html) => { const u = [...paragraphs]; u[i] = html; setParagraphs(u) }}
+                  onRemove={() => setParagraphs(paragraphs.filter((_, j) => j !== i))}
+                />
+              ))}
+            </div>
+            <button
+              onClick={() => setParagraphs([...paragraphs, ''])}
+              className="flex items-center gap-2 px-4 py-2 text-sm border border-dashed border-border rounded-xl text-muted-foreground hover:border-accent hover:text-accent transition-colors"
+            >
+              <Plus className="w-4 h-4" />
+              Add Paragraph
+            </button>
+            <div className="flex gap-2">
+              <button onClick={saveAbout} disabled={saving} className="flex items-center gap-2 px-5 py-2.5 bg-accent text-accent-foreground rounded-xl text-sm font-medium hover:opacity-90 transition-opacity disabled:opacity-60">
+                {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
+                Save
+              </button>
+              <button onClick={() => setEditing(false)} className="flex items-center gap-2 px-5 py-2.5 bg-secondary border border-border rounded-xl text-sm font-medium hover:border-accent transition-colors">
+                <X className="w-4 h-4" />
+                Cancel
+              </button>
+            </div>
+          </div>
+        ) : (
+          <div className="space-y-4 text-sm md:text-base text-muted-foreground leading-relaxed [&_a]:text-accent [&_a]:underline [&_a]:underline-offset-2 [&_a]:hover:opacity-80 [&_a]:transition-opacity">
+            {(dbDescription ?? data.description).map((paragraph, index) => (
+              <div key={index} dangerouslySetInnerHTML={{ __html: paragraph.startsWith('<') ? paragraph : `<p>${paragraph}</p>` }} />
+            ))}
+          </div>
+        )}
       </div>
 
       {/* What I'm Doing */}
       <div>
-        <h3 className="text-xl md:text-2xl font-bold text-foreground mb-6">What I'm Doing</h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
-          {data.services.map((service, index) => {
-            const IconComponent = iconMap[service.icon as keyof typeof iconMap]
-            return (
-              <div
-                key={index}
-                className="flex gap-3 md:gap-4 p-4 md:p-6 bg-secondary rounded-xl md:rounded-2xl border border-border hover:border-accent transition-colors"
-              >
-                <div className="w-10 h-10 md:w-12 md:h-12 flex-shrink-0">
-                  <IconComponent className="w-full h-full text-accent" strokeWidth={1.5} />
-                </div>
-                <div>
-                  <h4 className="text-base md:text-lg font-semibold text-foreground mb-2">{service.title}</h4>
-                  <p className="text-xs md:text-sm text-muted-foreground leading-relaxed">{service.description}</p>
-                </div>
-              </div>
-            )
-          })}
-        </div>
-      </div>
-
-      {/* Testimonials with Marquee Animation */}
-      <div>
         <div className="flex items-center justify-between mb-6">
-          <h3 className="text-xl md:text-2xl font-bold text-foreground">Testimonials</h3>
-          <Dialog open={testimonyOpen} onOpenChange={setTestimonyOpen}>
-            <DialogTrigger asChild>
-              <button className="flex items-center gap-2 px-3 py-2 text-xs sm:text-sm font-medium rounded-lg bg-accent text-accent-foreground hover:opacity-90 transition-colors">
-                <MessageSquarePlus className="w-4 h-4" />
-                Make a Testimony
-              </button>
-            </DialogTrigger>
-            <DialogContent className="sm:max-w-md">
-              <DialogHeader>
-                <DialogTitle>Share Your Testimony</DialogTitle>
-              </DialogHeader>
-              <form onSubmit={handleTestimonySubmit} className="space-y-4 mt-2">
-                <div>
-                  <label className="block text-sm font-medium text-foreground mb-2">Full Name <span className="text-red-500">*</span></label>
-                  <input
-                    type="text"
-                    value={testimonyForm.name}
-                    onChange={(e) => setTestimonyForm({ ...testimonyForm, name: e.target.value })}
-                    className="w-full px-4 py-3 bg-secondary border border-border rounded-xl text-foreground placeholder:text-muted-foreground focus:border-accent focus:ring-2 focus:ring-accent/20 focus:outline-none transition-all text-sm"
-                    placeholder="John Doe"
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-foreground mb-2">Email Address <span className="text-red-500">*</span></label>
-                  <input
-                    type="email"
-                    value={testimonyForm.email}
-                    onChange={(e) => setTestimonyForm({ ...testimonyForm, email: e.target.value })}
-                    className="w-full px-4 py-3 bg-secondary border border-border rounded-xl text-foreground placeholder:text-muted-foreground focus:border-accent focus:ring-2 focus:ring-accent/20 focus:outline-none transition-all text-sm"
-                    placeholder="john@example.com"
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-foreground mb-2">Profile Image <span className="text-muted-foreground text-xs">(optional)</span></label>
-                  <div className="flex items-center gap-4">
-                    <label className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-secondary border border-dashed border-border rounded-xl text-sm text-muted-foreground hover:border-accent hover:text-accent transition-colors cursor-pointer">
-                      <input type="file" accept="image/*" className="hidden" onChange={handleAvatarChange} />
-                      {avatarPreview ? 'Change Image' : 'Click to upload image'}
-                    </label>
-                    {avatarPreview && (
-                      <div className="relative flex-shrink-0">
-                        <img src={avatarPreview} alt="Preview" className="w-14 h-14 rounded-xl object-cover border border-border" />
-                        <button
-                          type="button"
-                          onClick={() => setAvatarPreview(null)}
-                          className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-destructive text-white text-xs flex items-center justify-center hover:opacity-90"
-                        >
-                          ×
-                        </button>
-                      </div>
-                    )}
-                  </div>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-foreground mb-2">Your Testimony <span className="text-red-500">*</span></label>
-                  <textarea
-                    rows={4}
-                    value={testimonyForm.text}
-                    onChange={(e) => setTestimonyForm({ ...testimonyForm, text: e.target.value })}
-                    className="w-full px-4 py-3 bg-secondary border border-border rounded-xl text-foreground placeholder:text-muted-foreground focus:border-accent focus:ring-2 focus:ring-accent/20 focus:outline-none transition-all resize-none text-sm"
-                    placeholder="Share your experience working with me..."
-                    required
-                  />
-                </div>
-                <button
-                  type="submit"
-                  disabled={testimonyLoading}
-                  className="flex items-center justify-center gap-2 w-full py-3 bg-accent text-accent-foreground rounded-xl font-medium hover:opacity-90 transition-all text-sm disabled:opacity-60 disabled:cursor-not-allowed"
-                >
-                  <Send className="w-4 h-4" />
-                  {testimonyLoading ? 'Submitting...' : 'Submit Testimony'}
-                </button>
-              </form>
-            </DialogContent>
-          </Dialog>
-        </div>
-        <div className="relative">
-          {/* Left button */}
-          <button
-            onClick={() => go('left')}
-            className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-3 z-10 w-8 h-8 rounded-lg bg-secondary border border-border hover:bg-accent hover:text-accent-foreground hover:border-accent transition-colors flex items-center justify-center shadow-sm"
-            aria-label="Previous"
-          >
-            <ChevronLeft className="w-4 h-4" />
-          </button>
-
-          {/* Cards */}
-          <div className="overflow-hidden mx-4">
-            <div
-              className="flex gap-3 md:gap-4"
-              style={{
-                transform: `translateX(calc(-${index} * (320px + 1rem)))`,
-                transition: animated ? 'transform 500ms ease-in-out' : 'none',
-              }}
+          <h3 className="text-xl md:text-2xl font-bold text-foreground">What I'm Doing</h3>
+          {isAdmin && !editingServices && (
+            <button
+              onClick={startEditingServices}
+              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg bg-secondary border border-border hover:border-accent hover:text-accent transition-colors"
             >
-              {items.map((testimonial, i) => {
-                const initials = testimonial.name.trim().split(/\s+/).length >= 2
-                  ? testimonial.name.trim().split(/\s+/).map((w: string) => w[0]).slice(0, 2).join('').toUpperCase()
-                  : testimonial.name.trim()[0].toUpperCase()
-                return (
-                <div key={i} className="flex-shrink-0 w-72 md:w-80 p-4 md:p-6 bg-secondary rounded-xl md:rounded-2xl border border-border">
-                  <div className="flex items-center gap-3 md:gap-4 mb-3 md:mb-4">
-                    {testimonial.avatar ? (
-                      <img
-                        src={testimonial.avatar}
-                        alt={testimonial.name}
-                        className="w-12 h-12 md:w-14 md:h-14 rounded-xl md:rounded-2xl object-cover flex-shrink-0"
-                      />
-                    ) : (
-                      <div className="w-12 h-12 md:w-14 md:h-14 rounded-xl md:rounded-2xl bg-accent/20 flex items-center justify-center flex-shrink-0">
-                        <span className="text-accent font-medium text-base md:text-lg">{initials}</span>
-                      </div>
-                    )}
-                    <div className="min-w-0">
-                      <h4 className="text-base md:text-lg font-semibold text-foreground truncate">{testimonial.name}</h4>
-                      <p className="text-xs text-muted-foreground truncate">{testimonial.email}</p>
-                    </div>
+              <Pencil className="w-3.5 h-3.5" />
+              Edit
+            </button>
+          )}
+        </div>
+        {editingServices ? (
+          <div className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              {servicesDraft.map((service, i) => (
+                <div key={i} className="p-4 bg-secondary border border-border rounded-xl space-y-3">
+                  <div className="flex items-center gap-2">
+                    <IconPicker value={service.icon} onChange={(name) => updateService(i, 'icon', name)} />
+                    <button
+                      onClick={() => setServicesDraft((prev) => prev.filter((_, j) => j !== i))}
+                      disabled={servicesDraft.length === 1}
+                      className="w-8 h-8 flex-shrink-0 rounded-lg bg-destructive/10 text-destructive hover:bg-destructive hover:text-white flex items-center justify-center transition-colors disabled:opacity-30"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
                   </div>
-                  <p className="text-xs md:text-sm text-muted-foreground leading-relaxed">{testimonial.text}</p>
+                  <input
+                    value={service.title}
+                    onChange={(e) => updateService(i, 'title', e.target.value)}
+                    className="w-full px-3 py-2 bg-card border border-border rounded-lg text-sm text-foreground placeholder:text-muted-foreground focus:border-accent focus:outline-none"
+                    placeholder="Service title"
+                  />
+                  <textarea
+                    value={service.description}
+                    onChange={(e) => updateService(i, 'description', e.target.value)}
+                    rows={2}
+                    className="w-full px-3 py-2 bg-card border border-border rounded-lg text-sm text-foreground placeholder:text-muted-foreground focus:border-accent focus:outline-none resize-none"
+                    placeholder="Service description"
+                  />
                 </div>
-                )
-              })}
+              ))}
+            </div>
+            <button
+              onClick={() => setServicesDraft((prev) => [...prev, { icon: 'Code', title: '', description: '' }])}
+              className="flex items-center gap-2 px-4 py-2 text-sm border border-dashed border-border rounded-xl text-muted-foreground hover:border-accent hover:text-accent transition-colors"
+            >
+              <Plus className="w-4 h-4" />
+              Add Service
+            </button>
+            <div className="flex gap-2">
+              <button onClick={saveServices} disabled={savingServices} className="flex items-center gap-2 px-5 py-2.5 bg-accent text-accent-foreground rounded-xl text-sm font-medium hover:opacity-90 transition-opacity disabled:opacity-60">
+                {savingServices ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
+                Save
+              </button>
+              <button onClick={() => setEditingServices(false)} className="flex items-center gap-2 px-5 py-2.5 bg-secondary border border-border rounded-xl text-sm font-medium hover:border-accent transition-colors">
+                <X className="w-4 h-4" />
+                Cancel
+              </button>
             </div>
           </div>
-
-          {/* Right button */}
-          <button
-            onClick={() => go('right')}
-            className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-3 z-10 w-8 h-8 rounded-lg bg-secondary border border-border hover:bg-accent hover:text-accent-foreground hover:border-accent transition-colors flex items-center justify-center shadow-sm"
-            aria-label="Next"
-          >
-            <ChevronRight className="w-4 h-4" />
-          </button>
-        </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
+            {(dbServices ?? data.services).map((service, index) => {
+              return (
+                <div
+                  key={index}
+                  className="flex gap-3 md:gap-4 p-4 md:p-6 bg-secondary rounded-xl md:rounded-2xl border border-border hover:border-accent transition-colors"
+                >
+                  <div className="w-10 h-10 md:w-12 md:h-12 flex-shrink-0">
+                    <LucideIcon name={service.icon} className="w-full h-full text-accent" strokeWidth={1.5} />
+                  </div>
+                  <div>
+                    <h4 className="text-base md:text-lg font-semibold text-foreground mb-2">{service.title}</h4>
+                    <p className="text-xs md:text-sm text-muted-foreground leading-relaxed">{service.description}</p>
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        )}
       </div>
 
-      {/* Clients with Marquee Animation */}
+      {/* Testimonials */}
       <div>
-        <h3 className="text-xl md:text-2xl font-bold text-foreground mb-6">Clients</h3>
-        <div className="relative overflow-hidden py-4">
-          <div className="flex gap-4 md:gap-6 animate-marquee-slow">
-            {[...data.clients, ...data.clients].map((client, index) => (
-              <div
-                key={index}
-                className="flex-shrink-0 w-32 h-20 md:w-40 md:h-24 bg-secondary rounded-xl md:rounded-2xl border border-border flex items-center justify-center p-4 md:p-6 hover:border-accent transition-colors"
-              >
-                <img
-                  src={client.logo || "/placeholder.svg"}
-                  alt={client.name}
-                  className="w-full h-full object-contain opacity-70 hover:opacity-100 transition-opacity"
+        <Dialog open={testimonyOpen} onOpenChange={setTestimonyOpen}>
+          <div className="flex items-center justify-between mb-6">
+            <h3 className="text-xl md:text-2xl font-bold text-foreground">Testimonials</h3>
+            {total > 0 && !isAdmin && (
+              <DialogTrigger asChild>
+                <button suppressHydrationWarning className="flex items-center gap-2 px-3 py-2 text-xs sm:text-sm font-medium rounded-lg bg-accent text-accent-foreground hover:opacity-90 transition-colors">
+                  <MessageSquarePlus className="w-4 h-4" />
+                  Make a Testimony
+                </button>
+              </DialogTrigger>
+            )}
+          </div>
+          {total === 0 ? (
+            <div className="bg-secondary border border-border rounded-2xl p-8 text-center space-y-4">
+              <p className="text-sm text-muted-foreground">No testimonials yet. Be the first to share your experience!</p>
+              {!isAdmin && (
+                <DialogTrigger asChild>
+                  <button suppressHydrationWarning className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg bg-accent text-accent-foreground hover:opacity-90 transition-colors">
+                    <MessageSquarePlus className="w-4 h-4" />
+                    Make a Testimony
+                  </button>
+                </DialogTrigger>
+              )}
+            </div>
+          ) : (
+            <div className="relative">
+              {showNav && (
+                <button
+                  onClick={() => go('left')}
+                  className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-3 z-10 w-8 h-8 rounded-lg bg-secondary border border-border hover:bg-accent hover:text-accent-foreground hover:border-accent transition-colors flex items-center justify-center shadow-sm"
+                  aria-label="Previous"
+                >
+                  <ChevronLeft className="w-4 h-4" />
+                </button>
+              )}
+              <div className={`overflow-hidden ${showNav ? 'mx-4' : ''}`} ref={containerCallbackRef}>
+                {cardWidth === 0 ? (
+                  <div className="flex" style={{ gap: `${GAP}px` }}>
+                    {Array.from({ length: cols }).map((_, i) => (
+                      <div key={i} className="flex-shrink-0 h-32 bg-secondary rounded-xl md:rounded-2xl border border-border animate-pulse" style={{ width: `calc(${100 / cols}% - ${GAP / cols}px)` }} />
+                    ))}
+                  </div>
+                ) : (
+                <div
+                  className="flex"
+                  style={{
+                    gap: `${GAP}px`,
+                    transform: cardWidth ? `translateX(-${index * (cardWidth + GAP)}px)` : undefined,
+                    transition: animated ? 'transform 500ms ease-in-out' : 'none',
+                  }}
+                >
+                  {items.map((testimonial, i) => {
+                    const initials = testimonial.name.trim().split(/\s+/).length >= 2
+                      ? testimonial.name.trim().split(/\s+/).map((w: string) => w[0]).slice(0, 2).join('').toUpperCase()
+                      : testimonial.name.trim()[0].toUpperCase()
+                    return (
+                      <div key={i} className="flex-shrink-0 p-4 bg-secondary rounded-xl md:rounded-2xl border border-border" style={{ width: cardWidth || undefined }}>
+                        <div className="flex items-center gap-3 mb-3">
+                          {testimonial.avatar ? (
+                            <Image
+                              src={testimonial.avatar}
+                              alt={testimonial.name}
+                              width={44}
+                              height={44}
+                              className="rounded-xl object-cover flex-shrink-0"
+                              loading="lazy"
+                            />
+                          ) : (
+                            <div className="w-11 h-11 rounded-xl bg-accent/20 flex items-center justify-center flex-shrink-0">
+                              <span className="text-accent font-medium text-base">{initials}</span>
+                            </div>
+                          )}
+                          <div className="min-w-0">
+                            <h4 className="text-base font-semibold text-foreground truncate">{testimonial.name}</h4>
+                            <p className="text-xs text-muted-foreground truncate">{testimonial.email}</p>
+                          </div>
+                        </div>
+                        <p className="text-xs md:text-sm text-muted-foreground leading-relaxed">{testimonial.text}</p>
+                      </div>
+                    )
+                  })}
+                </div>
+                )}
+              </div>
+              {showNav && (
+                <button
+                  onClick={() => go('right')}
+                  className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-3 z-10 w-8 h-8 rounded-lg bg-secondary border border-border hover:bg-accent hover:text-accent-foreground hover:border-accent transition-colors flex items-center justify-center shadow-sm"
+                  aria-label="Next"
+                >
+                  <ChevronRight className="w-4 h-4" />
+                </button>
+              )}
+            </div>
+          )}
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle>Share Your Testimony</DialogTitle>
+            </DialogHeader>
+            <form onSubmit={handleTestimonySubmit} className="space-y-4 mt-2">
+              <div>
+                <label className="block text-sm font-medium text-foreground mb-2">Full Name <span className="text-red-500">*</span></label>
+                <input
+                  type="text"
+                  value={testimonyForm.name}
+                  onChange={(e) => setTestimonyForm({ ...testimonyForm, name: e.target.value })}
+                  className="w-full px-4 py-3 bg-secondary border border-border rounded-xl text-foreground placeholder:text-muted-foreground focus:border-accent focus:ring-2 focus:ring-accent/20 focus:outline-none transition-all text-sm"
+                  placeholder="John Doe"
+                  required
                 />
               </div>
-            ))}
-          </div>
-        </div>
+              <div>
+                <label className="block text-sm font-medium text-foreground mb-2">Email Address <span className="text-red-500">*</span></label>
+                <input
+                  type="email"
+                  value={testimonyForm.email}
+                  onChange={(e) => setTestimonyForm({ ...testimonyForm, email: e.target.value })}
+                  className="w-full px-4 py-3 bg-secondary border border-border rounded-xl text-foreground placeholder:text-muted-foreground focus:border-accent focus:ring-2 focus:ring-accent/20 focus:outline-none transition-all text-sm"
+                  placeholder="john@example.com"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-foreground mb-2">Profile Image <span className="text-muted-foreground text-xs">(optional)</span></label>
+                <div className="flex items-center gap-4">
+                  <label className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-secondary border border-dashed border-border rounded-xl text-sm text-muted-foreground hover:border-accent hover:text-accent transition-colors cursor-pointer">
+                    <input type="file" accept="image/*" className="hidden" onChange={handleAvatarChange} />
+                    {avatarPreview ? 'Change Image' : 'Click to upload image'}
+                  </label>
+                  {avatarPreview && (
+                    <div className="relative flex-shrink-0">
+                      <img src={avatarPreview} alt="Preview" className="w-14 h-14 rounded-xl object-cover border border-border" />
+                      <button
+                        type="button"
+                        onClick={() => setAvatarPreview(null)}
+                        className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-destructive text-white text-xs flex items-center justify-center hover:opacity-90"
+                      >
+                        ×
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-foreground mb-2">Your Testimony <span className="text-red-500">*</span></label>
+                <textarea
+                  rows={4}
+                  value={testimonyForm.text}
+                  onChange={(e) => setTestimonyForm({ ...testimonyForm, text: e.target.value })}
+                  className="w-full px-4 py-3 bg-secondary border border-border rounded-xl text-foreground placeholder:text-muted-foreground focus:border-accent focus:ring-2 focus:ring-accent/20 focus:outline-none transition-all resize-none text-sm"
+                  placeholder="Share your experience working with me..."
+                  required
+                />
+              </div>
+              <button
+                type="submit"
+                disabled={testimonyLoading}
+                className="flex items-center justify-center gap-2 w-full py-3 bg-accent text-accent-foreground rounded-xl font-medium hover:opacity-90 transition-all text-sm disabled:opacity-60 disabled:cursor-not-allowed"
+              >
+                <Send className="w-4 h-4" />
+                {testimonyLoading ? 'Submitting...' : 'Submit Testimony'}
+              </button>
+            </form>
+          </DialogContent>
+        </Dialog>
       </div>
+
+      {/* Clients */}
+      {(!isAdmin && showClients) || isAdmin ? (
+        <div>
+          <div className="flex items-center justify-between mb-6">
+            <h3 className="text-xl md:text-2xl font-bold text-foreground">Clients</h3>
+            {isAdmin && (
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={toggleShowClients}
+                  disabled={togglingClients}
+                  title={showClients ? 'Hide from visitors' : 'Show to visitors'}
+                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none disabled:opacity-50 ${
+                    showClients ? 'bg-accent' : 'bg-border'
+                  }`}
+                >
+                  <span className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform ${
+                    showClients ? 'translate-x-6' : 'translate-x-1'
+                  }`} />
+                </button>
+                {!editingClients && (
+                  <button
+                    onClick={() => { setClientsDraft(dbClients ?? data.clients); setEditingClients(true) }}
+                    className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg bg-secondary border border-border hover:border-accent hover:text-accent transition-colors"
+                  >
+                    <Pencil className="w-3.5 h-3.5" />
+                    Edit
+                  </button>
+                )}
+              </div>
+            )}
+          </div>
+          {isAdmin && !showClients && (
+            <p className="text-xs text-muted-foreground mb-4 italic">Hidden from visitors</p>
+          )}
+          {editingClients ? (
+            <div className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                {clientsDraft.map((client, i) => (
+                  <div key={i} className="p-4 bg-secondary border border-border rounded-xl space-y-3">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-medium text-muted-foreground">Client {i + 1}</span>
+                      <button
+                        onClick={() => setClientsDraft((prev) => prev.filter((_, j) => j !== i))}
+                        className="w-7 h-7 rounded-lg bg-destructive/10 text-destructive hover:bg-destructive hover:text-white flex items-center justify-center transition-colors"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                    <input
+                      value={client.name}
+                      onChange={(e) => updateClient(i, 'name', e.target.value)}
+                      className="w-full px-3 py-2 bg-card border border-border rounded-lg text-sm text-foreground placeholder:text-muted-foreground focus:border-accent focus:outline-none"
+                      placeholder="Client name"
+                    />
+                    <label className="flex items-center gap-3 cursor-pointer">
+                      <input
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={(e) => { const f = e.target.files?.[0]; if (f) uploadClientLogo(i, f) }}
+                      />
+                      {client.logo ? (
+                        <div className="relative flex-shrink-0 group">
+                          <img src={client.logo} alt={client.name} className="w-14 h-14 rounded-xl object-contain bg-secondary border border-border" />
+                          <div className="absolute -bottom-1.5 -right-1.5 w-5 h-5 rounded-full bg-accent flex items-center justify-center shadow">
+                            <Pencil className="w-2.5 h-2.5 text-accent-foreground" />
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="flex items-center gap-2 px-3 py-2 bg-card border border-dashed border-border rounded-lg text-sm text-muted-foreground hover:border-accent hover:text-accent transition-colors">
+                          <Plus className="w-4 h-4" />
+                          Upload logo
+                        </div>
+                      )}
+                    </label>
+                  </div>
+                ))}
+              </div>
+              <button
+                onClick={() => setClientsDraft((prev) => [...prev, { name: '', logo: '' }])}
+                className="flex items-center gap-2 px-4 py-2 text-sm border border-dashed border-border rounded-xl text-muted-foreground hover:border-accent hover:text-accent transition-colors"
+              >
+                <Plus className="w-4 h-4" />
+                Add Client
+              </button>
+              <div className="flex gap-2">
+                <button onClick={saveClients} disabled={savingClients} className="flex items-center gap-2 px-5 py-2.5 bg-accent text-accent-foreground rounded-xl text-sm font-medium hover:opacity-90 transition-opacity disabled:opacity-60">
+                  {savingClients ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
+                  Save
+                </button>
+                <button onClick={() => setEditingClients(false)} className="flex items-center gap-2 px-5 py-2.5 bg-secondary border border-border rounded-xl text-sm font-medium hover:border-accent transition-colors">
+                  <X className="w-4 h-4" />
+                  Cancel
+                </button>
+              </div>
+            </div>
+          ) : (
+            (() => {
+              const clients = dbClients ?? data.clients
+              const shouldMarquee = clients.length >= 5
+              const displayed = shouldMarquee ? [...clients, ...clients] : clients
+              return (
+                <div className={`relative py-4 ${shouldMarquee ? 'overflow-hidden' : ''}`}>
+                  <div className={`flex gap-6 md:gap-8 ${shouldMarquee ? 'animate-marquee-slow' : 'flex-wrap justify-center'}`}>
+                    {displayed.map((client, i) => (
+                      <Image
+                        key={i}
+                        src={client.logo || '/placeholder.svg'}
+                        alt={client.name || 'Client logo'}
+                        width={80}
+                        height={48}
+                        className="flex-shrink-0 object-contain opacity-60 hover:opacity-100 transition-opacity"
+                        style={{ height: 'auto' }}
+                        loading="lazy"
+                      />
+                    ))}
+                  </div>
+                </div>
+              )
+            })()
+          )}
+        </div>
+      ) : null}
     </div>
   )
 }

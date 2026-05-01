@@ -2,7 +2,8 @@
 
 import { Download, FileText } from 'lucide-react'
 
-export function ResumeDownload() {
+export function ResumeDownload({ cvUrl }: { cvUrl?: string | null }) {
+  const previewHref = cvUrl || null
   return (
     <div className="bg-gradient-to-br from-accent/5 via-secondary to-background rounded-lg border border-accent/20 p-6 md:p-8">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
@@ -17,14 +18,16 @@ export function ResumeDownload() {
             </p>
           </div>
         </div>
-        <a
-          href="/resume.pdf"
-          download="Resume.pdf"
-          className="flex items-center gap-2 px-4 md:px-6 py-2 md:py-3 bg-accent text-accent-foreground rounded-lg hover:opacity-90 transition-opacity font-medium text-sm md:text-base whitespace-nowrap flex-shrink-0"
-        >
-          <Download className="w-4 h-4" />
-          Download
-        </a>
+        {previewHref && (
+          <a
+            href="/api/resume-cv"
+            download="Tenbite Daniel Resume.pdf"
+            className="flex items-center gap-2 px-4 md:px-6 py-2 md:py-3 bg-accent text-accent-foreground rounded-lg hover:opacity-90 transition-opacity font-medium text-sm md:text-base whitespace-nowrap flex-shrink-0"
+          >
+            <Download className="w-4 h-4" />
+            Download
+          </a>
+        )}
       </div>
     </div>
   )

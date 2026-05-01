@@ -1,115 +1,124 @@
-'use client'
-
-import { useState, useRef } from 'react'
-import { ProfileSidebar } from '@/components/profile-sidebar'
-import { AboutSection } from '@/components/about-section'
-import { ResumeSection } from '@/components/resume-section'
-import { PortfolioSection } from '@/components/portfolio-section'
-import { BlogSection } from '@/components/blog-section'
-import { ContactSection } from '@/components/contact-section-new'
-import { ThemeToggle } from '@/components/theme-toggle'
+import { connectDB } from '@/lib/mongodb'
+import { Profile } from '@/models/Profile'
+import { About } from '@/models/About'
+import { Testimony } from '@/models/Testimony'
+import { Project } from '@/models/Project'
+import { Resume } from '@/models/Resume'
+import { CaseStudy } from '@/models/CaseStudy'
+import { profileData, aboutData, resumeData } from '@/lib/portfolio-data'
+import { HomeClient } from '@/components/home-client'
 import { GitHubSection } from '@/components/github-section'
-import { CaseStudiesSection } from '@/components/case-studies-section'
-import { ResumeDownload } from '@/components/resume-download'
-import {
-  profileData,
-  aboutData,
-  resumeData,
-  portfolioData,
-  blogData,
-  contactData,
-} from '@/lib/portfolio-data'
+import { cacheTag } from 'next/cache'
+import { Suspense } from 'react'
 
-export default function Home() {
-  const [activeSection, setActiveSection] = useState('about')
-  const navRef = useRef<HTMLElement>(null)
-  const mainRef = useRef<HTMLDivElement>(null)
+async function getProfile() {
+  'use cache'
+  cacheTag('profile')
+  await connectDB()
+  const doc = await Profile.findOne().lean()
+  return JSON.parse(JSON.stringify(doc))
+}
 
-  const handleTabClick = (section: string) => {
-    setActiveSection(section)
-    const nav = navRef.current
-    if (nav) {
-      const btn = nav.querySelector(`[data-section="${section}"]`) as HTMLElement
-      if (btn) btn.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' })
-    }
-    setTimeout(() => {
-      const main = mainRef.current
-      if (!main) return
-      const top = main.getBoundingClientRect().top + window.scrollY - 28
-      window.scrollTo({ top, behavior: 'smooth' })
-    }, 50)
+async function getAbout() {
+  'use cache'
+  cacheTag('about')
+  await connectDB()
+  const doc = await About.findOne().lean()
+  return JSON.parse(JSON.stringify(doc))
+}
+
+async function getTestimonials() {
+  'use cache'
+  cacheTag('testimonials')
+  await connectDB()
+  const docs = await Testimony.find({ status: 'approved' }).sort({ createdAt: -1 }).lean()
+  return JSON.parse(JSON.stringify(docs))
+}
+
+async function getResume() {
+  'use cache'
+  cacheTag('resume')
+  await connectDB()
+  const doc = await Resume.findOne().lean() as Record<string, unknown> | null
+  const plain = doc ? JSON.parse(JSON.stringify(doc)) : null
+  return {
+    experience: plain?.experience ?? resumeData.experience,
+    education: plain?.education ?? resumeData.education,
+    skills: plain?.skills ?? resumeData.skills,
+    cvUrl: plain?.cvUrl ?? null,
   }
+}
+
+async function getProjects() {
+  'use cache'
+  cacheTag('projects')
+  await connectDB()
+  const docs = await Project.find().sort({ order: 1, createdAt: -1 }).lean()
+  return JSON.parse(JSON.stringify(docs))
+}
+
+async function getCaseStudies() {
+  'use cache'
+  cacheTag('case-studies')
+  await connectDB()
+  const docs = await CaseStudy.find().sort({ order: 1 }).lean()
+  return JSON.parse(JSON.stringify(docs))
+}
+
+export default async function Home() {
+  const [profileDoc, aboutDoc, testimonials, projectDocs, resumeDoc, caseStudyDocs] = await Promise.all([
+    getProfile(),
+    getAbout(),
+    getTestimonials(),
+    getProjects(),
+    getResume(),
+    getCaseStudies(),
+  ])
+
+  const profile = profileDoc
+    ? {
+        ...profileData,
+        name: profileDoc.name ?? profileData.name,
+        title: profileDoc.title ?? profileData.title,
+        avatar: profileDoc.avatar ?? profileData.avatar,
+        email: profileDoc.email ?? profileData.email,
+        phone: profileDoc.phone ?? profileData.phone,
+        location: profileDoc.location ?? profileData.location,
+        social: {
+          github: profileDoc.social?.github ?? profileData.social.github,
+          linkedin: profileDoc.social?.linkedin ?? profileData.social.linkedin,
+          instagram: profileDoc.social?.instagram ?? profileData.social.instagram,
+          tiktok: profileDoc.social?.tiktok ?? profileData.social.tiktok,
+        },
+      }
+    : profileData
+
+  const description: string[] = aboutDoc?.description?.length
+    ? aboutDoc.description
+    : aboutData.description
+
+  const services = aboutDoc?.services?.length
+    ? aboutDoc.services.map(({ icon, title, description }: { icon: string; title: string; description: string }) => ({ icon, title, description }))
+    : undefined
+  const clients = aboutDoc?.clients?.length
+    ? aboutDoc.clients.map(({ name, logo }: { name: string; logo: string }) => ({ name, logo }))
+    : undefined
+  const showClients: boolean = typeof aboutDoc?.showClients === 'boolean' ? aboutDoc.showClients : true
+  const showMetrics: boolean = typeof aboutDoc?.showMetrics === 'boolean' ? aboutDoc.showMetrics : true
+  const showBlog: boolean = typeof aboutDoc?.showBlog === 'boolean' ? aboutDoc.showBlog : true
+  const showCaseStudies: boolean = typeof aboutDoc?.showCaseStudies === 'boolean' ? aboutDoc.showCaseStudies : true
+  const showKeyOutcomes: boolean = typeof aboutDoc?.showKeyOutcomes === 'boolean' ? aboutDoc.showKeyOutcomes : true
+
+  const projects = projectDocs?.length ? projectDocs : null
+  const caseStudies = caseStudyDocs?.length ? caseStudyDocs : []
 
   return (
-    <div className="min-h-screen bg-background p-3 sm:p-4 md:p-6 lg:py-6 lg:pr-6 lg:pl-[22rem]">
-      {/* Covers viewport top so scrolled content doesn't show above the card */}
-      <div className="fixed top-0 left-0 right-0 h-7 bg-background z-40" />
-      <div className="fixed top-1 right-1 md:top-2 md:right-2 z-50">
-        <ThemeToggle />
-      </div>
-
-      {/* Fixed Sidebar - desktop only */}
-      <div className="hidden lg:block fixed top-6 left-6 bottom-6 w-80 z-40">
-        <ProfileSidebar data={profileData} />
-      </div>
-
-      {/* Mobile Sidebar */}
-      <div className="lg:hidden mb-3 sm:mb-4">
-        <ProfileSidebar data={profileData} />
-      </div>
-
-      <div className="mx-auto max-w-5xl">
-        <main ref={mainRef} className="bg-card rounded-xl md:rounded-2xl border border-border">
-          {/* Navigation - sticky */}
-          <div className="sticky top-7 z-30 border-b border-border overflow-hidden">
-            {/* Covers the gap above the sticky nav so content doesn't show through */}
-            <div className="absolute -top-7 left-0 right-0 h-7 bg-background" />
-            <div className="relative bg-card">
-              <nav ref={navRef} className="bg-card flex items-center gap-1 sm:gap-2 md:gap-3 p-3 sm:p-4 md:p-6 overflow-x-auto scrollbar-hide">
-                {['about', 'portfolio', 'github', 'resume', 'blog', 'case studies', 'contact'].map((section) => (
-                  <button
-                    key={section}
-                    data-section={section}
-                    onClick={() => handleTabClick(section)}
-                    className={`px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-medium capitalize transition-colors whitespace-nowrap flex-shrink-0 ${
-                      activeSection === section
-                        ? 'text-foreground bg-accent/10'
-                        : 'text-muted-foreground hover:text-foreground hover:bg-secondary'
-                    }`}
-                  >
-                    {section}
-                  </button>
-                ))}
-                <a
-                  href="/resume.pdf"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="ml-auto flex-shrink-0 px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-medium whitespace-nowrap bg-accent text-accent-foreground hover:opacity-90 transition-opacity"
-                >
-                  Preview Resume
-                </a>
-              </nav>
-              {/* Scroll hint gradient - only on mobile */}
-              <div className="pointer-events-none absolute right-0 top-0 bottom-0 w-12 bg-gradient-to-l from-card to-transparent lg:hidden" />
-            </div>
-          </div>
-
-          <div className="p-4 sm:p-5 md:p-6 lg:p-8 space-y-8">
-            {activeSection === 'about' && <AboutSection data={aboutData} />}
-            {activeSection === 'portfolio' && <PortfolioSection data={portfolioData} />}
-            {activeSection === 'case studies' && <CaseStudiesSection />}
-            {activeSection === 'blog' && <BlogSection />}
-            {activeSection === 'github' && <GitHubSection />}
-            {activeSection === 'resume' && (
-              <div className="space-y-8">
-                <ResumeDownload />
-                <ResumeSection data={resumeData} />
-              </div>
-            )}
-            {activeSection === 'contact' && <ContactSection data={contactData} />}
-          </div>
-        </main>
-      </div>
-    </div>
+    <Suspense>
+      <HomeClient profile={profile} aboutDescription={description} aboutServices={services} aboutClients={clients} aboutShowClients={showClients} showMetrics={showMetrics} showBlog={showBlog} showCaseStudies={showCaseStudies} showKeyOutcomes={showKeyOutcomes} initialProjects={projects} initialCaseStudies={caseStudies} testimonials={testimonials} resumeData={resumeDoc} githubSection={
+        <Suspense key="github" fallback={<div className="flex items-center justify-center py-12"><p className="text-muted-foreground">Loading GitHub data...</p></div>}>
+          <GitHubSection />
+        </Suspense>
+      } />
+    </Suspense>
   )
 }
