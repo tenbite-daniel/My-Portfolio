@@ -31,14 +31,28 @@ interface HomeClientProps {
   githubSection: ReactNode
 }
 
-export function HomeClient({ profile, aboutDescription, aboutServices, aboutClients, aboutShowClients, showMetrics: _showMetrics, showBlog = true, showCaseStudies = true, showKeyOutcomes = true, initialCaseStudies = [], initialProjects: _initialProjects, testimonials, resumeData: resumeDoc, githubSection }: HomeClientProps) {
+export function HomeClient({ profile, aboutDescription, aboutServices, aboutClients, aboutShowClients, showMetrics: _showMetrics, showBlog: initialShowBlog = true, showCaseStudies: initialShowCaseStudies = true, showKeyOutcomes = true, initialCaseStudies = [], initialProjects: _initialProjects, testimonials, resumeData: resumeDoc, githubSection }: HomeClientProps) {
   const router = useRouter()
   const searchParams = useSearchParams()
   const [activeSection, setActiveSection] = useState(() => searchParams.get('tab') ?? 'about')
-  const cvUrl = resumeDoc?.cvUrl ?? null
-  const publicTabs = ['github', 'resume', ...(showCaseStudies ? ['case studies'] : []), 'contact']
+  const [showBlog, setShowBlog] = useState(initialShowBlog)
+  const [showCaseStudies, setShowCaseStudies] = useState(initialShowCaseStudies)
+  const [cvUrl, setCvUrl] = useState(resumeDoc?.cvUrl ?? null)
   const navRef = useRef<HTMLElement>(null)
   const mainRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    fetch('/api/nav')
+      .then((r) => r.json())
+      .then((d) => {
+        setShowBlog(d.showBlog)
+        setShowCaseStudies(d.showCaseStudies)
+        if (d.cvUrl !== undefined) setCvUrl(d.cvUrl)
+      })
+      .catch(() => {})
+  }, [])
+
+  const publicTabs = ['github', 'resume', ...(showCaseStudies ? ['case studies'] : []), 'contact']
 
   const updateUrl = (tab: string) => {
     const params = new URLSearchParams()
